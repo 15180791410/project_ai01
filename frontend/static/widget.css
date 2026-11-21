@@ -1,0 +1,192 @@
+/* ============================================================
+   ai · 页面悬浮客服挂件（yw = yuejiao widget）
+   挂载在官网与客服页，能力与「免费咨询」一致：客服与活动工作流
+   ============================================================ */
+
+.yw-root {
+    position: fixed; right: 24px; bottom: 24px; z-index: 9000;
+    font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ---------- 悬浮球 ---------- */
+.yw-ball {
+    width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff; font-size: 25px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, .38);
+    transition: transform .18s ease, box-shadow .18s ease;
+    position: relative;
+}
+.yw-ball:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 12px 30px rgba(37, 99, 235, .46); }
+.yw-ball:active { transform: scale(.97); }
+.yw-ball .yw-dot {
+    position: absolute; top: 2px; right: 2px; width: 12px; height: 12px;
+    background: #ef4444; border: 2px solid #fff; border-radius: 50%;
+}
+.yw-ball .yw-dot.hide { display: none; }
+
+/* 首次进入的气泡提示 */
+.yw-teaser {
+    position: absolute; right: 72px; bottom: 8px; white-space: nowrap;
+    background: #fff; color: #111827; font-size: 13px; padding: 9px 13px;
+    border-radius: 10px; box-shadow: 0 6px 20px rgba(16, 24, 40, .14);
+    border: 1px solid #e5e7eb; animation: ywTeaser 4s ease forwards;
+}
+.yw-teaser::after {
+    content: ""; position: absolute; right: -5px; bottom: 14px; width: 10px; height: 10px;
+    background: #fff; border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;
+    transform: rotate(-45deg);
+}
+.yw-teaser.hide { display: none; }
+@keyframes ywTeaser {
+    0% { opacity: 0; transform: translateX(8px); }
+    8%, 82% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(4px); }
+}
+
+/* ---------- 面板 ---------- */
+.yw-panel {
+    position: absolute; right: 0; bottom: 74px; width: 372px; height: 552px;
+    background: #fff; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 18px 48px rgba(16, 24, 40, .22);
+    border: 1px solid #e5e7eb;
+    display: flex; flex-direction: column;
+    transform-origin: bottom right;
+    animation: ywIn .2s ease;
+}
+.yw-panel.hide { display: none; }
+@keyframes ywIn {
+    from { opacity: 0; transform: translateY(10px) scale(.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.yw-head {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff; padding: 15px 17px; display: flex; align-items: center; gap: 11px;
+    flex-shrink: 0;
+}
+.yw-head .yw-avatar {
+    width: 36px; height: 36px; border-radius: 50%; background: rgba(255, 255, 255, .2);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.yw-head .yw-tt { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.yw-head .yw-st { font-size: 11.5px; opacity: .85; margin-top: 2px; }
+.yw-close {
+    margin-left: auto; background: rgba(255, 255, 255, .16); border: none; color: #fff;
+    width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+}
+.yw-close:hover { background: rgba(255, 255, 255, .28); }
+
+/* ---------- 消息区 ---------- */
+.yw-body {
+    flex: 1; overflow-y: auto; padding: 16px 15px 8px; background: #f8fafc;
+    display: flex; flex-direction: column; gap: 12px;
+}
+.yw-body::-webkit-scrollbar { width: 6px; }
+.yw-body::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+.yw-msg { display: flex; gap: 8px; max-width: 92%; }
+.yw-msg .yw-b {
+    padding: 10px 13px; border-radius: 12px; font-size: 13.5px; line-height: 1.65;
+    white-space: pre-wrap; word-break: break-word;
+}
+.yw-msg.ai .yw-b { background: #fff; color: #1f2937; border: 1px solid #e5e7eb; border-top-left-radius: 4px; }
+.yw-msg.me { align-self: flex-end; flex-direction: row-reverse; }
+.yw-msg.me .yw-b { background: #2563eb; color: #fff; border-top-right-radius: 4px; }
+.yw-msg .yw-face {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+    background: #dbeafe; color: #2563eb;
+}
+.yw-msg.me .yw-face { background: #e5e7eb; color: #4b5563; }
+
+/* 快捷问题 */
+.yw-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.yw-chip {
+    background: #fff; border: 1px solid #dbeafe; color: #1d4ed8; font-size: 12.5px;
+    padding: 7px 11px; border-radius: 999px; cursor: pointer; transition: all .15s;
+}
+.yw-chip:hover { background: #eff6ff; border-color: #93c5fd; }
+
+/* 打字指示 */
+.yw-typing { display: inline-flex; gap: 4px; align-items: center; padding: 4px 0; }
+.yw-typing i {
+    width: 6px; height: 6px; border-radius: 50%; background: #9ca3af;
+    animation: ywBlink 1.2s infinite;
+}
+.yw-typing i:nth-child(2) { animation-delay: .18s; }
+.yw-typing i:nth-child(3) { animation-delay: .36s; }
+@keyframes ywBlink { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
+
+/* ---------- 底部输入 ---------- */
+.yw-foot { flex-shrink: 0; border-top: 1px solid #e5e7eb; background: #fff; padding: 10px 12px 11px; }
+.yw-inrow { display: flex; gap: 8px; align-items: flex-end; }
+.yw-inrow textarea {
+    flex: 1; resize: none; height: 40px; max-height: 96px; padding: 10px 12px;
+    border: 1px solid #e5e7eb; border-radius: 10px; font-size: 13.5px; line-height: 1.4;
+    font-family: inherit; outline: none; color: #111827; background: #fff;
+}
+.yw-inrow textarea:focus { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(37, 99, 235, .1); }
+.yw-send {
+    height: 40px; padding: 0 16px; border: none; border-radius: 10px; cursor: pointer;
+    background: #2563eb; color: #fff; font-size: 13.5px; font-weight: 600;
+    flex: 0 0 auto; white-space: nowrap;   /* 不被输入框挤扁 */
+}
+.yw-send:hover { background: #1d4ed8; }
+.yw-send:disabled { background: #bfdbfe; cursor: not-allowed; }
+
+.yw-links {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 8px; font-size: 11.5px; color: #9ca3af;
+}
+.yw-links a { color: #2563eb; text-decoration: none; cursor: pointer; }
+.yw-links a:hover { text-decoration: underline; }
+
+/* ---------- 留资小表单 ---------- */
+.yw-lead {
+    position: absolute; left: 0; right: 0; bottom: 0; background: #fff;
+    border-top: 1px solid #e5e7eb; padding: 14px 15px 16px;
+    box-shadow: 0 -8px 24px rgba(16, 24, 40, .08);
+}
+.yw-lead.hide { display: none; }
+.yw-lead h4 { margin: 0 0 4px; font-size: 14px; color: #111827; }
+.yw-lead p { margin: 0 0 10px; font-size: 12px; color: #6b7280; }
+.yw-lead input {
+    width: 100%; box-sizing: border-box; padding: 9px 11px; margin-bottom: 8px;
+    border: 1px solid #e5e7eb; border-radius: 9px; font-size: 13px; outline: none;
+    font-family: inherit; color: #111827;
+}
+.yw-lead input:focus { border-color: #93c5fd; }
+.yw-lead-actions { display: flex; gap: 8px; }
+.yw-lead-actions button { flex: 1; height: 36px; border-radius: 9px; font-size: 13px; cursor: pointer; }
+.yw-lead-ok { border: none; background: #2563eb; color: #fff; font-weight: 600; }
+.yw-lead-ok:hover { background: #1d4ed8; }
+.yw-lead-cancel { border: 1px solid #e5e7eb; background: #fff; color: #4b5563; }
+.yw-lead-msg { font-size: 12px; margin-top: 6px; min-height: 16px; }
+.yw-lead-msg.err { color: #b91c1c; }
+.yw-lead-msg.ok { color: #047857; }
+
+/* ---------- 移动端 ---------- */
+@media (max-width: 520px) {
+    .yw-root { right: 14px; bottom: 14px; }
+    .yw-panel {
+        position: fixed; inset: 0; width: 100%; height: 100%;
+        border-radius: 0; border: none; bottom: 0; right: 0;
+    }
+    .yw-teaser { display: none; }
+}
+
+/* 悬浮客服面板里的富文本（renderMarkdown 产物） */
+/* .yw-b 默认 pre-wrap，富文本模式要关掉，否则 HTML 换行会变成空白 */
+.yw-msg .yw-b.md { white-space: normal; }
+.yw-msg .yw-b.md .md-p { margin: 0 0 7px; }
+.yw-msg .yw-b.md .md-h { margin: 10px 0 5px; font-size: 13.5px; }
+.yw-msg .yw-b.md .md-ul,
+.yw-msg .yw-b.md .md-ol { margin: 3px 0 7px; padding-left: 18px; }
+.yw-msg .yw-b.md li { margin: 2px 0; }
+.yw-msg .yw-b.md .md-code { font-size: 12px; padding: 8px 10px; }
+.yw-msg .yw-b.md .md-table { font-size: 12.5px; }
+.yw-msg .yw-b.md .md-table th,
+.yw-msg .yw-b.md .md-table td { padding: 5px 7px; }
+.yw-msg .yw-b.md .md-quote { padding: 6px 10px; margin: 6px 0; }

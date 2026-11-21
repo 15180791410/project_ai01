@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生工作台 · 留学生管家</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="static/premium.css">
+</head>
+<body>
+    <!-- 顶部栏 -->
+    <div class="topbar">
+        <div class="brand"><span class="logo">🎓</span> 留学生管家 · 学生工作台</div>
+        <div class="nav-links">
+            <a href="index.html">官网首页</a>
+            <a href="service.html">客服与活动</a>
+            <span id="notifBellBox"></span>
+            <span id="userChip" class="user-chip" style="display:none;"></span>
+            <a onclick="logout()" style="cursor:pointer;">退出登录</a>
+        </div>
+    </div>
+
+    <!-- 登录/注册面板 -->
+    <div id="authPanel" class="container">
+        <div class="card card-sm">
+            <div class="tabs">
+                <button id="tabLogin" class="active" onclick="switchTab('login')">登录</button>
+                <button id="tabRegister" onclick="switchTab('register')">注册</button>
+            </div>
+            <div id="loginForm">
+                <form id="studentLoginForm" autocomplete="on" onsubmit="submitStudentLogin(event)">
+                    <h2 class="center">学生登录</h2>
+                    <p class="center muted" style="font-size:14px;">登录后以你的真实身份办理业务</p>
+                    <label for="loginUser">账号</label>
+                    <input type="text" id="loginUser" name="username" placeholder="请输入账号" autocomplete="username">
+                    <label for="loginPass">密码</label>
+                    <input type="password" id="loginPass" name="password" placeholder="请输入密码" autocomplete="current-password">
+                    <label style="display:flex;gap:8px;align-items:center;margin-top:10px;"><input type="checkbox" id="rememberUser" style="width:auto;"> 记住账号</label>
+                    <button type="submit" class="btn-block btn-lg" style="margin-top:18px;">登录</button>
+                    <p class="center"><a href="#" onclick="forgotPassword();return false;">忘记密码？</a></p>
+                    <div id="loginMsg" class="form-msg"></div>
+                </form>
+                <p class="login-hint">密码由浏览器密码管理器安全保存，系统不保存明文密码。</p>
+                <p class="login-hint">还没有账号？<a href="#" onclick="switchTab('register');return false;">立即注册</a>，注册后即可使用智能助手、查看留学方案与报名活动。</p>
+            </div>
+            <div id="registerForm" style="display:none;">
+                <form id="studentRegisterForm" autocomplete="on" onsubmit="submitStudentRegister(event)">
+                    <h2 class="center">学生注册</h2>
+                    <label for="regUser">账号 <span class="muted">(至少3字符)</span></label>
+                    <input type="text" id="regUser" name="username" placeholder="请设置登录账号" autocomplete="username">
+                    <label for="regName">姓名</label>
+                    <input type="text" id="regName" name="name" placeholder="请输入真实姓名" autocomplete="name">
+                    <label for="regContact">手机 / 邮箱</label>
+                    <input type="text" id="regContact" name="contact" placeholder="选填" autocomplete="email">
+                    <label for="regPass">密码 <span class="muted">(至少6位)</span></label>
+                    <input type="password" id="regPass" name="new_password" placeholder="请设置密码" autocomplete="new-password">
+                    <label for="regPass2">确认密码</label>
+                    <input type="password" id="regPass2" name="confirm_password" placeholder="再次输入密码" autocomplete="new-password">
+                    <label for="regQuestion">密码找回问题</label>
+                    <select id="regQuestion">
+                        <option>你的出生城市是？</option><option>你的第一所学校是？</option><option>你最喜欢的老师姓什么？</option>
+                    </select>
+                    <label for="regAnswer">安全问题答案</label>
+                    <input type="text" id="regAnswer" placeholder="请牢记，用于找回密码">
+                    <button type="submit" class="btn-block btn-lg" style="margin-top:18px;">注册并登录</button>
+                    <div id="regMsg" class="form-msg"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 工作台 -->
+    <div id="workspace" class="workspace" style="display:none;">
+        <aside class="ws-side" id="wsSide"></aside>
+        <main class="ws-main">
+            <!-- 概览 -->
+            <section class="ws-page active" id="page-overview">
+                <div class="page-head">
+                    <div><h2>工作台概览</h2><div class="sub" id="overviewHi">欢迎回来</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadOverview()">刷新数据</button></div>
+                </div>
+                <div class="insight-hero">
+                    <div class="insight-copy">
+                        <div class="insight-eyebrow">STUDENT SUCCESS COCKPIT</div>
+                        <h3>个人成长与留学进度</h3>
+                        <p id="studentHeroSummary">正在同步成绩、服务记录、申请和情绪数据。</p>
+                    </div>
+                    <div class="insight-badge">
+                        <span class="pulse-dot"></span><small>当前学籍阶段</small>
+                        <b id="studentHeroStage">—</b>
+                        <small id="studentHeroHint">实时同步</small>
+                    </div>
+                </div>
+                <div id="stageCard"></div>
+                <div id="lifecycleDetailCard"></div>
+                <div class="overview-grid" id="overviewStats"></div>
+                <div class="dashboard-grid" id="studentOverviewCharts">
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>课程成绩表现</h4><p>按课程查看最近成绩</p></div><span class="chart-chip">LEARNING</span></div>
+                        <div id="studentScoreChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>服务办理结构</h4><p>请假、售后与成绩记录</p></div><span class="chart-chip">SERVICE</span></div>
+                        <div id="studentServiceChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>申请进度</h4><p>当前留学申请阶段</p></div><span class="chart-chip">APPLICATION</span></div>
+                        <div id="studentApplicationChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>情绪趋势</h4><p>最近记录的情绪分值变化</p></div><span class="chart-chip">WELLBEING</span></div>
+                        <div id="studentEmotionChart"></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">快捷功能</div>
+                    <p class="panel-desc">点击快速进入常用服务</p>
+                    <div class="quick-grid">
+                        <button type="button" class="quick-tile" data-mod="chat" onclick="goPage('chat')"><div class="qt-ico">🤖</div><div class="qt-label">智能助手</div></button>
+                        <button type="button" class="quick-tile" data-mod="programs" onclick="goPage('programs')"><div class="qt-ico">🌍</div><div class="qt-label">留学方案</div></button>
+                        <button type="button" class="quick-tile" data-mod="leave-apply" onclick="goPage('leave-apply')"><div class="qt-ico">📝</div><div class="qt-label">请假申请</div></button>
+                        <button type="button" class="quick-tile" data-mod="leaves" onclick="goPage('leaves')"><div class="qt-ico">📋</div><div class="qt-label">我的请假</div></button>
+                        <button type="button" class="quick-tile" data-mod="feedback" onclick="goPage('feedback')"><div class="qt-ico">🛠️</div><div class="qt-label">售后反馈</div></button>
+                        <button type="button" class="quick-tile" data-mod="scores" onclick="goPage('scores')"><div class="qt-ico">📊</div><div class="qt-label">我的成绩</div></button>
+                        <button type="button" class="quick-tile" data-mod="activities" onclick="goPage('activities')"><div class="qt-ico">📅</div><div class="qt-label">活动报名</div></button>
+                        <button type="button" class="quick-tile" data-mod="application" onclick="goPage('application')"><div class="qt-ico">🎓</div><div class="qt-label">申请进度</div></button>
+                        <button type="button" class="quick-tile" data-mod="emotion" onclick="goPage('emotion')"><div class="qt-ico">💭</div><div class="qt-label">心情记录</div></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 智能助手 -->
+            <section class="ws-page" id="page-chat">
+                <div class="page-head"><div><h2>🤖 智能助手</h2><div class="sub">请假、成绩、情绪、政策咨询，直接告诉我</div></div></div>
+                <div class="chat-card ws-chat-card">
+                    <div class="chat-header">
+                        <div><div class="title">留学生管家</div><div class="subtitle">你的智能学业与生活助手</div></div>
+                        <span class="user-chip" id="chatUserChip"></span>
+                    </div>
+                    <div id="chatBox" class="chat-body">
+                        <div class="msg ai"><div class="avatar">粤</div><div class="content"><div class="who">助手</div><div class="bubble">你好！我是你的留学生管家。请假、查成绩、倾诉心情、咨询留学政策，都可以直接告诉我～</div></div></div>
+                    </div>
+                    <div class="chat-input">
+                        <div class="row"><input type="text" id="question" placeholder="输入你的问题，回车发送"><button onclick="sendQuestion()" id="sendBtn">发送</button></div>
+                        <div class="chat-status" id="status"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 留学方案 -->
+            <section class="ws-page" id="page-programs">
+                <div class="page-head">
+                    <div><h2>🌍 留学方案</h2><div class="sub">查看可选国家和具体项目，可直接带入就读申请</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadStudentPrograms()">刷新</button></div>
+                </div>
+                <div class="panel">
+                    <div class="form-grid">
+                        <div><label for="programCountryFilter">国家 / 地区</label><select id="programCountryFilter" onchange="renderStudentPrograms()"><option value="">全部国家</option></select></div>
+                        <div><label for="programCategoryFilter">方案类别</label><select id="programCategoryFilter" onchange="renderStudentPrograms()"><option value="">全部类别</option></select></div>
+                        <div><label for="programKeywordFilter">方案关键词</label><input id="programKeywordFilter" oninput="renderStudentPrograms()" placeholder="例如：本科、就业、双元制"></div>
+                        <div style="display:flex;align-items:end;"><button class="btn-sm-outline" onclick="resetProgramFilters()">重置筛选</button></div>
+                    </div>
+                </div>
+                <div id="studentProgramList"><div class="muted center" style="padding:30px;">加载中...</div></div>
+            </section>
+
+            <!-- 请假申请 -->
+            <section class="ws-page" id="page-leave-apply">
+                <div class="page-head"><div><h2>📝 请假申请</h2><div class="sub">提交后由老师审批，可在"我的请假"查看进度</div></div></div>
+                <div class="panel">
+                    <div class="panel-title">填写请假信息</div>
+                    <div class="form-grid">
+                        <div><label>开始日期</label><input type="date" id="leaveStart"></div>
+                        <div><label>结束日期</label><input type="date" id="leaveEnd"></div>
+                        <div class="full"><label>请假理由</label><textarea id="leaveReason" placeholder="例如：身体不适，需要休息三天"></textarea></div>
+                    </div>
+                    <div class="form-actions"><button onclick="submitLeave()">提交申请</button><button class="btn-sm-outline" onclick="switchPage('leaves')">查看我的请假</button></div>
+                    <div id="leaveApplyMsg" class="form-msg"></div>
+                </div>
+            </section>
+
+            <!-- 我的请假 -->
+            <section class="ws-page" id="page-leaves">
+                <div class="page-head"><div><h2>📋 我的请假</h2><div class="sub">查看请假记录与审批状态</div></div><div class="head-actions"><button class="btn-sm-outline" onclick="loadMyLeaves()">刷新</button></div></div>
+                <div class="panel">
+                    <div class="tbl-wrap"><table class="data-table">
+                        <thead><tr><th>ID</th><th>开始</th><th>结束</th><th>理由</th><th>状态</th><th>老师留言 / 驳回理由</th><th>提交时间</th></tr></thead>
+                        <tbody id="leaveBody"><tr><td colspan="7" class="center muted">加载中...</td></tr></tbody>
+                    </table></div>
+                </div>
+            </section>
+
+            <!-- 售后反馈 -->
+            <section class="ws-page" id="page-feedback">
+                <div class="page-head"><div><h2>🛠️ 售后反馈</h2><div class="sub">提交问题工单，工作人员会跟进处理</div></div></div>
+                <div class="panel">
+                    <div class="panel-title">提交新问题</div>
+                    <div class="form-grid"><div class="full"><label>反馈内容</label><textarea id="feedbackContent" placeholder="请描述你遇到的问题或建议"></textarea></div></div>
+                    <div class="form-actions"><button onclick="submitFeedback()">提交反馈</button></div>
+                    <div id="feedbackMsg" class="form-msg"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><div class="panel-title" style="margin:0;">我的工单</div><button class="btn-sm-outline" onclick="loadMyFeedbacks()">刷新</button></div>
+                    <div class="tbl-wrap"><table class="data-table">
+                        <thead><tr><th>ID</th><th>内容</th><th>状态</th><th>解决方案</th><th>时间</th></tr></thead>
+                        <tbody id="feedbackBody"><tr><td colspan="5" class="center muted">加载中...</td></tr></tbody>
+                    </table></div>
+                </div>
+            </section>
+
+            <!-- 我的成绩 -->
+            <section class="ws-page" id="page-scores">
+                <div class="page-head"><div><h2>📊 我的成绩</h2><div class="sub">查看各科成绩与学期表现</div></div><div class="head-actions"><button class="btn-sm-outline" onclick="loadMyScores()">刷新</button></div></div>
+                <div class="overview-grid" id="scoreStats"></div>
+                <div class="panel chart-panel">
+                    <div class="chart-panel-head"><div><h4>课程成绩对比</h4><p>分数只来自当前学生真实成绩记录</p></div><span class="chart-chip">0-100</span></div>
+                    <div id="scoreAnalysisChart"></div>
+                </div>
+                <div class="panel">
+                    <div class="tbl-wrap"><table class="data-table">
+                        <thead><tr><th>ID</th><th>课程</th><th>分数</th><th>学期</th></tr></thead>
+                        <tbody id="scoreBody"><tr><td colspan="4" class="center muted">加载中...</td></tr></tbody>
+                    </table></div>
+                </div>
+            </section>
+
+            <!-- 情绪记录 -->
+            <section class="ws-page" id="page-emotion">
+                <div class="page-head"><div><h2>💭 心情记录</h2><div class="sub">记录心情，我们会在你低落时提供关怀</div></div></div>
+                <div class="panel">
+                    <div class="panel-title">今天心情怎么样？</div>
+                    <div class="form-grid"><div class="full"><label>想说的话</label><textarea id="emotionText" placeholder="写下你现在的心情..."></textarea></div></div>
+                    <div class="form-actions"><button onclick="submitEmotion()">记录心情</button></div>
+                    <div id="emotionMsg" class="form-msg"></div>
+                </div>
+                <div class="panel chart-panel">
+                    <div class="chart-panel-head"><div><h4>情绪变化趋势</h4><p>分值越高表示当前情绪风险越需要关注</p></div><span class="chart-chip">0-100</span></div>
+                    <div id="emotionTrendChart"></div>
+                </div>
+                <div class="panel" style="margin-top:16px;">
+                    <div class="panel-head">
+                        <div>
+                            <div class="panel-title" style="margin:0;">我的心情与关怀记录</div>
+                            <div class="sub" id="emotionRecordSummary">加载中...</div>
+                        </div>
+                        <button class="btn-sm-outline" onclick="loadEmotionRecords()">刷新</button>
+                    </div>
+                    <div class="tbl-wrap"><table class="data-table">
+                        <thead><tr><th>时间</th><th>来源</th><th>倾诉内容</th><th>情绪判断</th><th>老师状态</th><th>返回消息 / 老师反馈</th></tr></thead>
+                        <tbody id="emotionRecordBody"><tr><td colspan="6" class="center muted">加载中...</td></tr></tbody>
+                    </table></div>
+                </div>
+            </section>
+
+            <!-- 活动报名 -->
+            <section class="ws-page" id="page-activities">
+                <div class="page-head"><div><h2>📅 活动与讲座</h2><div class="sub">最新活动在线报名，名额有限先到先得</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadActivities()">刷新</button></div></div>
+                <div class="panel chart-panel">
+                    <div class="chart-panel-head"><div><h4>活动名额余量</h4><p>报名前先了解每场活动实时容量</p></div><span class="chart-chip">CAPACITY</span></div>
+                    <div id="activityCapacityChart"></div>
+                </div>
+                <div id="activityList"></div>
+                <div class="panel" style="margin-top:16px;">
+                    <div class="panel-head"><div class="panel-title" style="margin:0;">我的报名</div><button class="btn-sm-outline" onclick="loadMyRegs()">刷新</button></div>
+                    <div class="tbl-wrap"><table class="data-table">
+                        <thead><tr><th>ID</th><th>活动</th><th>时间</th><th>地点</th><th>状态</th><th>报名时间</th></tr></thead>
+                        <tbody id="myRegBody"><tr><td colspan="6" class="center muted">加载中...</td></tr></tbody>
+                    </table></div>
+                </div>
+            </section>
+
+            <!-- 申请进度 -->
+            <section class="ws-page" id="page-application">
+                <div class="page-head"><div><h2>🎓 留学申请进度</h2><div class="sub">选校→材料→递交→Offer→签证→入学，全程可视化</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadMyApps()">刷新</button></div></div>
+                <div class="panel chart-panel">
+                    <div class="chart-panel-head"><div><h4>申请流程定位</h4><p>每一份申请当前所处阶段</p></div><span class="chart-chip">PIPELINE</span></div>
+                    <div id="studentApplicationStageChart"></div>
+                </div>
+                <div class="panel" id="studyApplyPanel" style="margin-bottom:16px;">
+                    <div class="panel-title">主动申请就读</div>
+                    <p class="panel-desc">活动报名只代表参加活动，不等于申请就读。请在这里选择国家、学习模式和项目。</p>
+                    <div class="form-grid">
+                        <div><label>国家 / 地区</label><select id="applyCountry" onchange="syncApplyModes()"><option value="">请选择</option></select></div>
+                        <div><label>学习模式</label><select id="applyMode" onchange="syncApplyPrograms()"><option value="">请先选择国家</option></select></div>
+                        <div><label>申请项目</label><select id="applyProgram"><option value="">请先选择学习模式</option></select></div>
+                        <div><label>目标院校（选填）</label><input id="applyUniversity" placeholder="例如：慕尼黑大学"></div>
+                        <div class="full"><label>申请说明（选填）</label><textarea id="applyRemark" placeholder="补充当前学历、语言、预算或时间计划"></textarea></div>
+                    </div>
+                    <div class="form-actions"><button id="applySubmitBtn" onclick="submitStudyApplication()">提交就读申请</button><button id="applyCancelEditBtn" class="btn-ghost" style="display:none;" onclick="resetApplicationForm()">取消编辑</button></div>
+                    <div id="applyMsg" class="form-msg"></div>
+                </div>
+                <div id="applicationList"><div class="muted center" style="padding:30px;">加载中...</div></div>
+            </section>
+
+            <!-- 用户中心 -->
+            <section class="ws-page" id="page-profile">
+                <div class="page-head"><div><h2>👤 用户中心</h2><div class="sub">个人资料、数据概览与账户安全</div></div></div>
+                <div id="userCenterBox"></div>
+                <div class="panel" style="margin-top:16px;">
+                    <div class="panel-title">🌍 我的留学规划</div>
+                    <p class="panel-desc">设置你的意向留学国家，顾问会更精准地为你推荐方案与活动。</p>
+                    <div class="form-grid">
+                        <div><label>意向国家</label>
+                            <select id="countrySelect"><option value="">加载可选国家...</option></select>
+                        </div>
+                    </div>
+                    <div class="form-actions"><button onclick="saveMyCountry()">保存意向国家</button></div>
+                    <div id="countryMsg" class="form-msg"></div>
+                </div>
+            </section>
+
+            <!-- 未解锁引导（由 goPage / onLockedPage 动态填充） -->
+            <section class="ws-page" id="page-locked">
+                <div id="lockedBox"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="static/common.js"></script>
+    <script src="static/charts.js"></script>
+    <script>
+        let user = null;
+        let conversationId = "";
+        // 成绩列表的指纹用于判断数据是否真的变化。首次加载只渲染，
+        // 后续轮询只有发现课程、分数或学期发生变化时才提示，避免打扰。
+        let lastScoreSignature = "";
+        let scoreSyncBusy = false;
+        // 每个模块对应的学籍能力键：解锁规则由后端 lifecycle 统一下发
+        const MOD_CAP = {
+            "chat": "chat", "programs": "programs", "activities": "activities", "emotion": "emotion",
+            "application": "application", "leave-apply": "leave", "leaves": "leave",
+            "feedback": "feedback", "scores": "scores"
+        };
+        const MOD_META = {
+            "application": { needLabel: "申请期", title: "申请进度",
+                reason: "顾问为你建立申请档案后，这里会自动出现你的申请时间轴。" },
+            "leave-apply": { needLabel: "在读", title: "请假申请",
+                reason: "请假是在读学生才能使用的服务，入学后系统自动解锁。" },
+            "leaves": { needLabel: "在读", title: "我的请假",
+                reason: "你还没有入学，暂时没有请假记录。入学后这里会显示审批进度。" },
+            "feedback": { needLabel: "在读", title: "售后反馈",
+                reason: "售后工单面向已入学的学生。现在有问题可以直接问智能助手。" },
+            "scores": { needLabel: "在读", title: "我的成绩",
+                reason: "成绩会在你入学开课后产生，现在还没有可查询的记录。" },
+            "emotion": { needLabel: "在读", title: "心情记录",
+                reason: "心情记录只对已入学学生开放，避免把咨询客户和潜在学员的数据混入学生心理画像。如遇紧急情绪风险，仍可通过智能助手获得安全提醒。" }
+        };
+        const navItems = [
+            { id: "overview", icon: "🏠", label: "工作台概览" },
+            { group: "智能服务" },
+            { id: "chat", icon: "🤖", label: "智能助手" },
+            { id: "programs", icon: "🌍", label: "留学方案" },
+            { id: "leave-apply", icon: "📝", label: "请假申请" },
+            { id: "leaves", icon: "📋", label: "我的请假" },
+            { id: "feedback", icon: "🛠️", label: "售后反馈" },
+            { id: "scores", icon: "📊", label: "我的成绩" },
+            { id: "activities", icon: "📅", label: "活动报名" },
+            { id: "application", icon: "🎓", label: "申请进度" },
+            { id: "emotion", icon: "💭", label: "心情记录" },
+            { group: "账户" },
+            { id: "profile", icon: "👤", label: "用户中心" }
+        ];
+        let stageInfo = null;   // 后端下发的学籍阶段与能力矩阵
+
+        function switchTab(tab) {
+            const isLogin = tab === "login";
+            document.getElementById("loginForm").style.display = isLogin ? "block" : "none";
+            document.getElementById("registerForm").style.display = isLogin ? "none" : "block";
+            document.getElementById("tabLogin").classList.toggle("active", isLogin);
+            document.getElementById("tabRegister").classList.toggle("active", !isLogin);
+        }
+        function submitStudentLogin(event) {
+            event.preventDefault();
+            doLogin();
+        }
+
+        function submitStudentRegister(event) {
+            event.preventDefault();
+            doRegister();
+        }
+
+        async function doLogin() {
+            const msg = document.getElementById("loginMsg");
+            const username = document.getElementById("loginUser").value.trim();
+            const password = document.getElementById("loginPass").value;
+            if (!username || !password) { msg.className = "form-msg msg-err"; msg.innerText = "请填写账号和密码"; return; }
+            msg.className = "form-msg"; msg.innerText = "正在登录...";
+            try {
+                const data = await apiPost("/api/auth/login", { username, password });
+                if (data.code === 200) {
+                    if (document.getElementById("rememberUser").checked) localStorage.setItem("yj_remember_username", username);
+                    else localStorage.removeItem("yj_remember_username");
+                    onAuthed(data.data);
+                }
+                else { msg.className = "form-msg msg-err"; msg.innerText = data.msg || "登录失败"; }
+            } catch (e) { msg.className = "form-msg msg-err"; msg.innerText = "无法连接后端服务，请确认服务已启动"; }
+        }
+        async function doRegister() {
+            const msg = document.getElementById("regMsg");
+            const username = document.getElementById("regUser").value.trim();
+            const real_name = document.getElementById("regName").value.trim();
+            const contact_info = document.getElementById("regContact").value.trim();
+            const security_question = document.getElementById("regQuestion").value;
+            const security_answer = document.getElementById("regAnswer").value.trim();
+            const password = document.getElementById("regPass").value;
+            const password2 = document.getElementById("regPass2").value;
+            if (!username || !password) { msg.className = "form-msg msg-err"; msg.innerText = "请填写账号和密码"; return; }
+            if (password !== password2) { msg.className = "form-msg msg-err"; msg.innerText = "两次输入的密码不一致"; return; }
+            msg.className = "form-msg"; msg.innerText = "正在注册...";
+            if (!security_answer) { msg.className = "form-msg msg-err"; msg.innerText = "请填写安全问题答案"; return; }
+            try {
+                const data = await apiPost("/api/auth/register", {
+                    username, password, real_name, contact_info, security_question, security_answer
+                });
+                if (data.code === 200) onAuthed(data.data);
+                else { msg.className = "form-msg msg-err"; msg.innerText = data.msg || "注册失败"; }
+            } catch (e) { msg.className = "form-msg msg-err"; msg.innerText = "无法连接后端服务"; }
+        }
+        async function forgotPassword() {
+            const username = await promptBox("找回密码", "请输入注册账号", { required: true });
+            if (!username) return;
+            const q = await apiPost("/api/auth/recovery-question", { username });
+            if (q.code !== 200) { toast(q.msg || "无法找回", "err"); return; }
+            const answer = await promptBox("安全问题", q.data.security_question, { required: true });
+            if (answer === null) return;
+            const password = await promptBox("设置新密码", "请输入至少 6 位的新密码", { required: true, inputType: "password" });
+            if (!password) return;
+            const d = await apiPost("/api/auth/forgot-password", { username, security_answer: answer, new_password: password });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+            if (d.code === 200) document.getElementById("loginUser").value = username;
+        }
+        function onAuthed(u) {
+            if (u.user_type !== "STUDENT") {
+                document.getElementById("loginMsg").className = "form-msg msg-err";
+                document.getElementById("loginMsg").innerText = "该账号不是学生身份，请前往对应入口登录";
+                return;
+            }
+            Session.set(u); enterWorkspace(u);
+        }
+        function enterWorkspace(u) {
+            user = u;
+            document.getElementById("authPanel").style.display = "none";
+            document.getElementById("workspace").style.display = "flex";
+            document.getElementById("userChip").textContent = (u.real_name || u.username) + "（学生）";
+            document.getElementById("userChip").style.display = "inline-block";
+            document.getElementById("chatUserChip").textContent = u.real_name || u.username;
+            document.getElementById("overviewHi").textContent = "你好，" + (u.real_name || u.username) + "，今天想办理什么业务？";
+            if (u.lifecycle) applyStage(u.lifecycle);
+            renderWorkspaceSidebar({
+                user: u, roleLabel: "学生", items: navItems,
+                foot: "留学生管家 v3.0", onNavigate: goPage,
+            });
+            renderNotificationBell("notifBellBox", u);
+            // 支持从通知点击带 #page=xxx 跳转
+            const m = location.hash.match(/page=(\w+)/);
+            loadOverview();
+            loadVerifiedCountries();
+            if (m) setTimeout(function () { switchPage(m[1]); }, 100);
+        }
+        function logout() { Session.clear(); location.href = "index.html"; }
+
+        // ---- 学籍阶段：能力判定 + 侧边栏锁定态 ----
+        function capOf(lc, mod) {
+            const cap = MOD_CAP[mod];
+            if (!cap) return true;
+            return !!(lc && lc.capabilities && lc.capabilities[cap]);
+        }
+
+        function lifecycleLabel(key) {
+            return {
+                CONSULT: "咨询期", APPLYING: "申请期",
+                ENROLLED: "在读", ALUMNI: "已毕业"
+            }[key] || key || "—";
+        }
+
+        function renderLifecycleDetail(lc) {
+            const box = document.getElementById("lifecycleDetailCard");
+            if (!box) return;
+            if (!lc || ["ENROLLED", "ALUMNI"].indexOf(lc.stage) < 0) {
+                box.innerHTML = "";
+                return;
+            }
+            const enrollment = lc.enrollment || {};
+            const missing = (lc.completeness && lc.completeness.missing) || [];
+            const requests = lc.graduation_requests || [];
+            const activeRequest = requests.find(function (row) {
+                return row.status === "待审核" || row.status === "已通过";
+            });
+            const approved = requests.some(function (row) { return row.status === "已通过"; });
+            let action = "";
+            if (lc.stage === "ENROLLED") {
+                if (activeRequest) {
+                    action = '<span class="badge badge-wait">毕业申请：' + esc(activeRequest.status) + '</span>';
+                } else if (missing.length) {
+                    action = '<span class="badge badge-wait">培养计划待班主任补录</span>';
+                } else {
+                    action = '<button onclick="openGraduationRequest()">申请毕业审核</button>';
+                }
+            } else {
+                action = '<span class="badge badge-done">已完成毕业流程</span>';
+            }
+            const timeline = (lc.lifecycle_events || []).map(function (event) {
+                return '<div class="tl-item done"><div class="tl-dot"></div><div class="tl-content">' +
+                    '<div class="tl-stage">' + esc(lifecycleLabel(event.from_stage)) +
+                    ' → ' + esc(lifecycleLabel(event.to_stage)) + '</div>' +
+                    '<div class="tl-detail">' + esc(event.reason || "阶段变更") + '</div>' +
+                    '<div class="tl-time">' + esc(event.effective_date || "日期待补录") +
+                    (event.operator_role ? " · " + esc(event.operator_role) : "") + '</div></div></div>';
+            }).join("");
+            box.innerHTML =
+                '<div class="panel lifecycle-detail">' +
+                    '<div class="panel-head"><div><div class="panel-title">培养计划与毕业进度</div>' +
+                    '<p class="panel-desc">标准学制、预计毕业日期和每次阶段变化均由后端记录</p></div>' + action + '</div>' +
+                    (missing.length
+                        ? '<div class="lifecycle-warning">待补录：' + esc(missing.join("、")) +
+                          '。请联系班主任完善入学档案。</div>'
+                        : '') +
+                    '<div class="info-list">' +
+                        '<div class="info-item"><div class="k">入学项目</div><div class="v">' +
+                            esc(enrollment.program || "待补录") + '</div></div>' +
+                        '<div class="info-item"><div class="k">入学日期</div><div class="v">' +
+                            esc(enrollment.enrollment_date || "待补录") + '</div></div>' +
+                        '<div class="info-item"><div class="k">标准学制</div><div class="v">' +
+                            esc(enrollment.duration_text || (enrollment.standard_duration_months
+                                ? enrollment.standard_duration_months + " 个月" : "待补录")) + '</div></div>' +
+                        '<div class="info-item"><div class="k">预计毕业</div><div class="v">' +
+                            esc(enrollment.expected_graduation_date || "待补录") + '</div></div>' +
+                        (enrollment.actual_graduation_date
+                            ? '<div class="info-item"><div class="k">实际毕业</div><div class="v">' +
+                              esc(enrollment.actual_graduation_date) + '</div></div>' : '') +
+                    '</div>' +
+                    (enrollment.expected_graduation_date
+                        ? '<div class="lifecycle-progress"><div><span>培养进度</span><b>' +
+                          esc(enrollment.study_progress_pct || 0) + '%</b></div>' +
+                          '<div class="progress-bar"><i style="width:' +
+                          Math.max(0, Math.min(100, Number(enrollment.study_progress_pct || 0))) +
+                          '%"></i></div></div>' : '') +
+                    '<div class="panel-title" style="margin-top:20px;">生命周期记录</div>' +
+                    '<div class="timeline">' + (timeline ||
+                        '<div class="muted">暂无生命周期流水</div>') + '</div>' +
+                '</div>';
+        }
+
+        async function openGraduationRequest() {
+            const r = await formBox("申请毕业审核", [
+                { key: "graduation_date", label: "毕业日期", type: "date", required: true },
+                { key: "completion_summary", label: "学业完成情况", type: "textarea", required: true,
+                  placeholder: "例如：已完成培养计划规定的课程、实习和结业要求" },
+                { key: "document_ref", label: "毕业材料编号 / 说明", placeholder: "例如：毕业证明待提交" },
+                { key: "student_note", label: "补充说明", type: "textarea" }
+            ], {
+                message: "提交后由班主任、管理员或领导审核，通过后学籍才会变为已毕业。",
+                okText: "提交审核"
+            });
+            if (!r) return;
+            const d = await apiPost("/api/lifecycle/graduation/request", {
+                token: user.token,
+                graduation_date: r.graduation_date,
+                completion_summary: r.completion_summary,
+                document_ref: r.document_ref,
+                student_note: r.student_note
+            });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+            if (d.code === 200) loadOverview();
+        }
+
+        function applyStage(lc) {
+            stageInfo = lc;
+            const applyPanel = document.getElementById("studyApplyPanel");
+            if (applyPanel) applyPanel.style.display =
+                (lc.stage === "ENROLLED" || lc.stage === "ALUMNI") ? "none" : "block";
+            navItems.forEach(function (it) {
+                if (it.group) return;
+                const meta = MOD_META[it.id];
+                it.locked = !!meta && !capOf(lc, it.id);
+                it.lockTip = meta ? ("「" + meta.title + "」需要" + meta.needLabel + "后解锁") : "";
+            });
+            const active = document.querySelector(".ws-side .nav-item.active");
+            const activeId = active ? active.getAttribute("data-page") : "overview";
+            renderWorkspaceSidebar({
+                user: user, roleLabel: "学生", items: navItems,
+                foot: "留学生管家 v3.0", onNavigate: goPage,
+            });
+            const again = document.querySelector('.ws-side .nav-item[data-page="' + activeId + '"]');
+            if (again) again.classList.add("active");
+            document.querySelectorAll(".quick-tile[data-mod]").forEach(function (t) {
+                const mod = t.getAttribute("data-mod");
+                if (MOD_META[mod] && !capOf(lc, mod)) t.classList.add("locked");
+                else t.classList.remove("locked");
+            });
+            renderStageTimeline("stageCard", lc);
+            renderLifecycleDetail(lc);
+        }
+        // 所有入口（侧边栏、快捷卡、通知跳转）统一走这里，锁定则展示引导页
+        function goPage(id) {
+            const meta = MOD_META[id];
+            if (meta && stageInfo && !capOf(stageInfo, id)) { showLocked(id); return; }
+            switchPage(id);
+        }
+        function showLocked(id) {
+            const meta = MOD_META[id] || { title: "该模块", needLabel: "对应阶段", reason: "该功能尚未开放。" };
+            const cur = stageInfo ? stageInfo.stage_label : "咨询期";
+            renderLockedCard("lockedBox",
+                "「" + meta.title + "」将在「" + meta.needLabel + "」阶段解锁",
+                "你目前处于「" + cur + "」。" + meta.reason,
+                [
+                    { label: "去问智能助手", primary: true, onclick: "switchPage('chat')" },
+                    { label: "返回概览", onclick: "switchPage('overview')" }
+                ]);
+            switchPage("locked");
+        }
+        window.onLockedPage = function (id) { showLocked(id); };
+
+        function studentRows(payload) {
+            return payload && payload.code === 200 && Array.isArray(payload.data) ? payload.data : [];
+        }
+
+        function studentCountBy(rows, key, labels, order) {
+            const tally = {};
+            (rows || []).forEach(function (row) {
+                const value = String(row[key] || "未分类");
+                tally[value] = (tally[value] || 0) + 1;
+            });
+            return (order || Object.keys(tally)).map(function (key) {
+                return { key: key, label: (labels && labels[key]) || key, value: tally[key] || 0 };
+            });
+        }
+
+        function openStudentPreview(title, subtitle, records, page, emptyText) {
+            showRecordPreview(title, subtitle, records, {
+                emptyText: emptyText || "当前条件下没有明细记录",
+                actionText: page ? "进入对应模块" : "",
+                onAction: page ? function () { goPage(page); } : null
+            });
+        }
+
+        function scorePreviewRecords(rows) {
+            return (rows || []).map(function (row) {
+                return {
+                    title: row.course_name || "课程成绩",
+                    badge: row.score + " 分",
+                    fields: [
+                        ["课程", row.course_name || "—"],
+                        ["成绩", row.score],
+                        ["学期", row.semester || "—"],
+                        ["来源", "学生成绩记录"]
+                    ]
+                };
+            });
+        }
+
+        function emotionPreviewRecords(rows) {
+            return (rows || []).map(function (row) {
+                return {
+                    title: row.time || "心情记录",
+                    badge: row.tag || "未分类",
+                    meta: row.text || "",
+                    fields: [
+                        ["情绪分", row.score == null ? "—" : row.score],
+                        ["记录来源", row.source || "心情记录"],
+                        ["老师状态", row.alert_status || "—"],
+                        ["老师反馈", row.teacher_note || "—"]
+                    ]
+                };
+            });
+        }
+
+        function applicationPreviewRecords(rows) {
+            return (rows || []).map(function (row) {
+                return {
+                    title: row.university || row.country || "留学申请",
+                    badge: row.stage || row.status,
+                    meta: row.program || "申请项目待定",
+                    fields: [
+                        ["国家/地区", row.country || "—"],
+                        ["当前阶段", row.stage || "—"],
+                        ["流程状态", row.status || "—"],
+                        ["完成进度", row.progress_pct == null ? "—" : row.progress_pct + "%"]
+                    ]
+                };
+            });
+        }
+
+        function renderStudentOverviewCharts(data) {
+            if (!window.YJCharts) return;
+            YJCharts.bars("studentScoreChart", (data.scores || []).map(function (score) {
+                return { label: score.course_name, value: Number(score.score) || 0 };
+            }), {
+                unit: " 分", colors: ["#2563eb", "#06b6d4", "#7c3aed", "#22a86b", "#f59e0b"],
+                emptyText: "暂无成绩，成绩录入后会显示",
+                onClick: function (row) {
+                    const rows = (data.scores || []).filter(function (item) { return item.course_name === row.label; });
+                    openStudentPreview("课程成绩 · " + row.label, "成绩明细", scorePreviewRecords(rows), "scores");
+                }
+            });
+            YJCharts.donut("studentServiceChart", [
+                { label: "请假申请", value: (data.leaves || []).length, color: "#2563eb" },
+                { label: "售后工单", value: (data.feedbacks || []).length, color: "#7c3aed" },
+                { label: "成绩记录", value: (data.scores || []).length, color: "#22a86b" }
+            ], {
+                centerLabel: "记录", emptyText: "暂无服务记录",
+                onClick: function (row) {
+                    if (row.label === "请假申请") {
+                        openStudentPreview("请假申请明细", "共 " + data.leaves.length + " 条记录",
+                            data.leaves.map(function (item) {
+                                return {
+                                    title: item.reason || "请假申请", badge: item.status || "待审批",
+                                    fields: [
+                                        ["开始日期", item.start_time || "—"],
+                                        ["结束日期", item.end_time || "—"],
+                                        ["审批意见", item.approver_comment || "—"],
+                                        ["提交时间", item.create_time || "—"]
+                                    ]
+                                };
+                            }), "leaves", "暂无请假记录");
+                    } else if (row.label === "售后工单") {
+                        openStudentPreview("售后工单明细", "共 " + data.feedbacks.length + " 条记录",
+                            data.feedbacks.map(function (item) {
+                                return {
+                                    title: item.content || "售后工单", badge: item.status || "待处理",
+                                    fields: [
+                                        ["问题详情", item.detail || "—"],
+                                        ["解决方案", item.solution || "—"],
+                                        ["是否通知", item.is_notified ? "是" : "否"],
+                                        ["提交时间", item.create_time || "—"]
+                                    ]
+                                };
+                            }), "feedback", "暂无售后工单");
+                    } else {
+                        openStudentPreview("成绩记录明细", "共 " + data.scores.length + " 条记录",
+                            scorePreviewRecords(data.scores), "scores", "暂无成绩记录");
+                    }
+                }
+            });
+            const stageOrder = ["选校定位", "材料准备", "递交申请", "面试/补充", "收到Offer", "办理签证", "行前准备", "已入学"];
+            YJCharts.funnel("studentApplicationChart", studentCountBy(data.apps || [], "stage", {}, stageOrder), {
+                colors: ["#2563eb", "#4f74ed", "#6366f1", "#7c5cf5", "#8b5cf6", "#06b6d4", "#14b8a6", "#22a86b"],
+                emptyText: "还没有留学申请",
+                onClick: function (row) {
+                    const rows = (data.apps || []).filter(function (item) { return item.stage === row.key; });
+                    openStudentPreview("申请阶段 · " + row.label, "共 " + rows.length + " 份申请",
+                        applicationPreviewRecords(rows), "application", "该阶段暂无申请");
+                }
+            });
+            renderEmotionChart("studentEmotionChart", data.emotion);
+        }
+
+        function renderEmotionChart(targetId, profile) {
+            if (!window.YJCharts) return;
+            const history = ((profile && profile.history) || []).slice().reverse().slice(-10);
+            YJCharts.line(targetId, history.map(function (row, index) {
+                return {
+                    label: String(row.time || ("记录" + (index + 1))).slice(5, 16),
+                    value: Number(row.score) || 0
+                };
+            }), {
+                min: 0, max: 100, color: "#7c5cf5", emptyText: "还没有心情记录",
+                onClick: function (row) {
+                    const record = history.find(function (item) {
+                        return String(item.time || "").slice(5, 16) === row.label;
+                    });
+                    if (record) {
+                        openStudentPreview("情绪记录 · " + row.label, "该次记录的完整信息",
+                            emotionPreviewRecords([record]), "emotion");
+                    }
+                }
+            });
+        }
+
+        // ---- 概览 ----
+        async function loadOverview() {
+            if (!user) return;
+            try {
+                const results = await Promise.allSettled([
+                    apiGet("/api/auth/profile"),
+                    apiGet("/api/student/my_leaves"),
+                    apiGet("/api/student/my_feedbacks"),
+                    apiGet("/api/student/my_scores"),
+                    apiGet("/api/application/my"),
+                    apiGet("/api/student/psych-profile"),
+                ]);
+                const value = function (index) {
+                    return results[index].status === "fulfilled" ? results[index].value : {};
+                };
+                const p = value(0);
+                // 后端下发学籍阶段：刷新侧边栏锁定态与进度卡
+                if (p.code === 200 && p.data && p.data.lifecycle) applyStage(p.data.lifecycle);
+                const s = (p.code === 200 && p.data.stats) ? p.data.stats : {};
+                const scoreRows = studentRows(value(3));
+                const leaveRows = studentRows(value(1));
+                const feedbackRows = studentRows(value(2));
+                const applicationRows = studentRows(value(4));
+                const emotionProfile = value(5).data || {};
+                if (stageInfo) {
+                    document.getElementById("studentHeroStage").textContent = stageInfo.stage_label || "当前阶段";
+                    document.getElementById("studentHeroHint").textContent = stageInfo.stage_desc || "实时同步";
+                }
+                document.getElementById("studentHeroSummary").textContent =
+                    "你有 " + scoreRows.length + " 条成绩、"
+                    + leaveRows.length + " 条请假记录、"
+                    + feedbackRows.length + " 条售后工单、"
+                    + applicationRows.length + " 份留学申请。数据来自当前学生账号。";
+                const cards = [
+                    { ico: "📋", cls: "ico-blue", n: s["请假次数"] || 0, l: "请假申请", page: "leaves" },
+                    { ico: "⏳", cls: "ico-amber", n: s["待审批"] || 0, l: "待审批请假", page: "leaves" },
+                    { ico: "🛠️", cls: "ico-purple", n: s["售后工单"] || 0, l: "售后工单", page: "feedback" },
+                    { ico: "📊", cls: "ico-green", n: s["成绩记录"] || 0, l: "成绩记录", page: "scores" }
+                ];
+                document.getElementById("overviewStats").innerHTML = cards.map(function (c) {
+                    return '<button type="button" class="ov-card ov-link" onclick="goPage(\'' + c.page + '\')"><div class="ov-ico ' + c.cls + '">' + c.ico + '</div><div><div class="ov-num">' + c.n + '</div><div class="ov-label">' + c.l + '</div></div></button>';
+                }).join("");
+                renderStudentOverviewCharts({
+                    scores: scoreRows, leaves: leaveRows, feedbacks: feedbackRows,
+                    apps: applicationRows, emotion: emotionProfile
+                });
+            } catch (e) {}
+        }
+
+        // ---- 智能助手 ----
+        async function sendQuestion() {
+            const input = document.getElementById("question");
+            const status = document.getElementById("status");
+            const btn = document.getElementById("sendBtn");
+            const q = input.value.trim();
+            if (!q || !user) return;
+            appendMsg("chatBox", "你", q); input.value = "";
+            status.innerText = "正在为你查询…"; btn.disabled = true;
+            try {
+                const data = await apiPost("/api/auth/dify-chat", { token: user.token, query: q, conversation_id: conversationId });
+                if (data.code === 200) {
+                    appendMsg("chatBox", "助手", data.data.answer || "（无回复内容）");
+                    conversationId = data.data.conversation_id || conversationId;
+                    // 售后成功撤回后，立即刷新当前页工单列表；若学生同时
+                    // 开了多个同源标签页，storage 事件会让另一个页面同步。
+                    if (data.data.feedback_changed) {
+                        localStorage.setItem("yj_feedback_changed", String(Date.now()));
+                        loadMyFeedbacks();
+                        loadOverview();
+                        toast("售后工单已撤回", "ok");
+                    }
+                    if (data.data.event_registration_changed) {
+                        localStorage.setItem("yj_event_changed", String(Date.now()));
+                        loadActivities();
+                        loadMyRegs();
+                        loadOverview();
+                        toast("活动报名成功", "ok");
+                    }
+                    if (data.data.leave_changed) {
+                        loadMyLeaves();
+                        loadOverview();
+                        toast("请假申请已提交", "ok");
+                    } else if (data.data.leave_duplicate) {
+                        loadMyLeaves();
+                        toast("相同请假已提交过，无需重复申请", "err");
+                    }
+                } else { appendMsg("chatBox", "助手", "出错了：" + (data.msg || "未知错误")); }
+            } catch (e) { appendMsg("chatBox", "助手", "无法连接后端服务"); }
+            finally { status.innerText = ""; btn.disabled = false; }
+        }
+
+        // ---- 请假 ----
+        async function submitLeave() {
+            const reason = document.getElementById("leaveReason").value.trim();
+            const start = document.getElementById("leaveStart").value;
+            const end = document.getElementById("leaveEnd").value;
+            const msg = document.getElementById("leaveApplyMsg");
+            if (!reason) { msg.className = "form-msg msg-err"; msg.innerText = "请填写请假理由"; return; }
+            if (start && !end) { msg.className = "form-msg msg-err"; msg.innerText = "请选择结束日期"; return; }
+            if (start && end && end < start) { msg.className = "form-msg msg-err"; msg.innerText = "结束日期不能早于开始日期"; return; }
+            try {
+                const d = await apiPost("/api/student/leave", {
+                    token: user.token, reason: reason, start_time: start, end_time: end
+                });
+                msg.className = "form-msg " + (d.code === 200 ? "msg-ok" : "msg-err");
+                msg.innerText = d.code === 200 ? ("提交成功！" + (d.data ? "（" + (d.data["开始"] || "") + " 至 " + (d.data["结束"] || "") + "）" : "")) : d.msg;
+                if (d.code === 200) { document.getElementById("leaveReason").value = ""; toast("请假申请已提交", "ok"); loadMyLeaves(); loadOverview(); }
+            } catch (e) { toast("无法连接后端服务", "err"); }
+        }
+        async function loadMyLeaves() {
+            if (!user) return;
+            try {
+                const d = await apiGet("/api/student/my_leaves");
+                renderTable("leaveBody", [
+                    { key: "id" }, { key: "start_time" }, { key: "end_time" }, { key: "reason" },
+                    { key: "status", render: function (r) { return statusBadge(r.status); } },
+                    { key: "approver_comment", render: function (r) {
+                        if (!r.approver_comment) return "—";
+                        const color = r.status === "已驳回" ? "#b91c1c" : "#166534";
+                        return '<span style="color:' + color + ';">' + esc(r.approver_comment) + '</span>';
+                    } },
+                    { key: "create_time" }
+                ], d.data, "暂无请假记录");
+            } catch (e) {}
+        }
+
+        // ---- 售后 ----
+        async function submitFeedback() {
+            const content = document.getElementById("feedbackContent").value.trim();
+            const msg = document.getElementById("feedbackMsg");
+            if (!content) { msg.className = "form-msg msg-err"; msg.innerText = "请填写反馈内容"; return; }
+            try {
+                const d = await apiPost("/api/student/feedback", { token: user.token, content: content });
+                msg.className = "form-msg " + (d.code === 200 ? "msg-ok" : "msg-err"); msg.innerText = d.msg || "";
+                if (d.code === 200) { document.getElementById("feedbackContent").value = ""; toast("反馈已提交", "ok"); loadMyFeedbacks(); loadOverview(); }
+            } catch (e) { toast("无法连接后端服务", "err"); }
+        }
+        async function loadMyFeedbacks() {
+            if (!user) return;
+            try {
+                const d = await apiGet("/api/student/my_feedbacks");
+                renderTable("feedbackBody", [
+                    { key: "id" }, { key: "content" },
+                    { key: "status", render: function (r) { return statusBadge(r.status); } },
+                    { key: "solution", render: function (r) { return esc(r.solution || "—"); } }, { key: "create_time" }
+                ], d.data, "暂无工单");
+            } catch (e) {}
+        }
+
+        // ---- 成绩 ----
+        function scoreSignature(rows) {
+            return (rows || []).map(function (r) {
+                return [r.id, r.course_name, r.score, r.semester].join("|");
+            }).join(";");
+        }
+
+        async function loadMyScores() {
+            if (!user || scoreSyncBusy) return;
+            scoreSyncBusy = true;
+            try {
+                const d = await apiGet("/api/student/my_scores");
+                if (d.code !== 200) return;
+                const rows = d.data || [];
+                const signature = scoreSignature(rows);
+                const changed = !!lastScoreSignature && signature !== lastScoreSignature;
+                lastScoreSignature = signature;
+                const nums = rows.map(function (r) { return Number(r.score); }).filter(function (n) { return !isNaN(n); });
+                const avg = nums.length ? (nums.reduce(function (a, b) { return a + b; }, 0) / nums.length).toFixed(1) : "—";
+                document.getElementById("scoreStats").innerHTML =
+                    '<div class="ov-card"><div class="ov-ico ico-blue">📚</div><div><div class="ov-num">' + rows.length + '</div><div class="ov-label">课程数</div></div></div>' +
+                    '<div class="ov-card"><div class="ov-ico ico-green">🏆</div><div><div class="ov-num">' + avg + '</div><div class="ov-label">平均分</div></div></div>';
+                if (window.YJCharts) {
+                    YJCharts.bars("scoreAnalysisChart", rows.map(function (row) {
+                        return { label: row.course_name, value: Number(row.score) || 0 };
+                    }), {
+                        unit: " 分", colors: ["#2563eb", "#06b6d4", "#7c3aed", "#22a86b", "#f59e0b"],
+                        emptyText: "暂无成绩",
+                        onClick: function (row) {
+                            const filtered = rows.filter(function (item) { return item.course_name === row.label; });
+                            openStudentPreview("课程成绩 · " + row.label, "成绩记录",
+                                scorePreviewRecords(filtered), "scores", "暂无该课程成绩");
+                        }
+                    });
+                }
+                renderTable("scoreBody", [{ key: "id" }, { key: "course_name" },
+                    { key: "score", render: function (r) { return '<strong>' + esc(r.score) + '</strong>'; } }, { key: "semester" }
+                ], rows, "暂无成绩");
+                if (changed) {
+                    toast("成绩已由老师更新", "ok");
+                    loadOverview();
+                }
+            } catch (e) {} finally {
+                scoreSyncBusy = false;
+            }
+        }
+
+        // ---- 情绪 ----
+        async function submitEmotion() {
+            const text = document.getElementById("emotionText").value.trim();
+            const msg = document.getElementById("emotionMsg");
+            if (!text) { msg.className = "form-msg msg-err"; msg.innerText = "请写下你的心情"; return; }
+            try {
+                const d = await apiPost("/api/student/emotion", { token: user.token, text: text });
+                msg.className = "form-msg " + (d.code === 200 ? "msg-ok" : "msg-err");
+                msg.innerText = d.code === 200 ? ("已记录：" + (d.data ? d.data["提示"] : "成功")) : d.msg;
+                if (d.code === 200) {
+                    document.getElementById("emotionText").value = "";
+                    toast("心情已记录", "ok");
+                    loadEmotionRecords();
+                }
+            } catch (e) { toast("无法连接后端服务", "err"); }
+        }
+
+        async function loadEmotionRecords() {
+            if (!user) return;
+            try {
+                const d = await apiGet("/api/student/psych-profile");
+                if (d.code !== 200 || !d.data) return;
+                const rows = d.data.history || [];
+                renderEmotionChart("emotionTrendChart", d.data);
+                document.getElementById("emotionRecordSummary").innerText =
+                    rows.length ? ("共 " + rows.length + " 条记录，最近一次：" + (d.data.last_interaction_time || "—"))
+                                : "还没有心情记录";
+                renderTable("emotionRecordBody", [
+                    { key: "time" },
+                    { key: "source", render: function (r) { return esc(r.source || "心情记录"); } },
+                    { key: "text", render: function (r) { return esc(r.text || "—"); } },
+                    { key: "tag", render: function (r) {
+                        const color = r.tag === "高危" ? "#dc2626" : (r.tag === "关注" ? "#d97706" : "#15803d");
+                        return '<strong style="color:' + color + ';">' + esc(r.tag || "正常") + ' · ' + esc(r.score == null ? "—" : r.score) + ' 分</strong>';
+                    } },
+                    { key: "alert_status", render: function (r) {
+                        if (!r.alert_status) return '<span class="muted">无预警</span>';
+                        return statusBadge(r.alert_status);
+                    } },
+                    { key: "system_response", render: function (r) {
+                        let html = '<div>' + esc(r.system_response || "—") + '</div>';
+                        if (r.teacher_note) {
+                            html += '<div class="subtext" style="margin-top:4px;color:#166534;">老师处理备注：' + esc(r.teacher_note) + '</div>';
+                        }
+                        return html;
+                    } }
+                ], rows, "暂无心情记录");
+            } catch (e) {}
+        }
+
+        // ---- 意向国家 ----
+        async function loadMyCountry() {
+            if (!user) return;
+            try {
+                const p = await apiGet("/api/auth/profile");
+                let country = (p.code === 200 && p.data) ? (p.data.target_country || "") : "";
+                if (!country) country = sessionStorage.getItem("yj_country") || "";
+                if (country) document.getElementById("countrySelect").value = country;
+            } catch (e) {}
+        }
+
+        async function loadVerifiedCountries() {
+            const d = await apiGet("/api/content/programs");
+            if (d.code !== 200) return;
+            window.verifiedCountries = Array.from(new Set((d.data || []).map(function (p) { return p.country; }).filter(Boolean)));
+            const select = document.getElementById("countrySelect");
+            select.innerHTML = '<option value="">请选择</option>' + window.verifiedCountries.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join("");
+        }
+        async function saveMyCountry() {
+            const msg = document.getElementById("countryMsg");
+            const country = document.getElementById("countrySelect").value;
+            if (!country) { msg.className = "form-msg msg-err"; msg.innerText = "请选择意向国家"; return; }
+            try {
+                const d = await apiPost("/api/content/student/country", { token: user.token, country: country });
+                msg.className = "form-msg " + (d.code === 200 ? "msg-ok" : "msg-err");
+                msg.innerText = d.msg || "";
+                if (d.code === 200) { sessionStorage.setItem("yj_country", country); toast("意向国家已保存", "ok"); }
+            } catch (e) { toast("保存失败", "err"); }
+        }
+
+        // ---- 活动报名 ----
+        async function loadActivities() {
+            try {
+                const d = await apiGet("/api/content/events");
+                const rows = d.data || [];
+                const box = document.getElementById("activityList");
+                if (window.YJCharts) {
+                    YJCharts.bars("activityCapacityChart", rows.map(function (event) {
+                        const max = Number(event.max_participants || 0);
+                        const current = Number(event.current_participants || 0);
+                        return {
+                            label: event.event_name,
+                            value: max ? Math.max(0, max - current) : 0,
+                            hint: max ? ("已报 " + current + " / " + max) : "不限名额"
+                        };
+                    }), {
+                        unit: " 席", colors: ["#22a86b", "#2563eb", "#06b6d4", "#7c3aed"],
+                        emptyText: "暂无可报名活动",
+                        onClick: function (row) {
+                            const event = rows.find(function (item) { return item.event_name === row.label; });
+                            if (!event) return;
+                            const max = Number(event.max_participants || 0);
+                            const current = Number(event.current_participants || 0);
+                            openStudentPreview("活动详情 · " + row.label, "报名与名额信息", [{
+                                title: row.label,
+                                badge: max && current >= max ? "名额已满" : "可报名",
+                                meta: event.description || "",
+                                fields: [
+                                    ["活动时间", event.start_time || "—"],
+                                    ["活动地点", event.location || "—"],
+                                    ["关联国家", event.country || "—"],
+                                    ["报名人数", current + " / " + (max || "不限")],
+                                    ["剩余名额", max ? Math.max(0, max - current) : "不限"]
+                                ]
+                            }], "activities", "活动不存在");
+                        }
+                    });
+                }
+                if (!rows.length) { box.innerHTML = '<div class="panel muted center">暂无活动，敬请期待</div>'; return; }
+                box.innerHTML = '<div class="panel"><div class="info-list">' + rows.map(function (e) {
+                    const maxp = e.max_participants || 0, cur = e.current_participants || 0;
+                    const full = maxp && cur >= maxp;
+                    const cap = maxp ? '<span class="capacity">' + (full ? '名额已满' : '余 ' + (maxp - cur) + ' 席') + '</span>' : '';
+                    return '<div class="info-item signup-card"><div><div style="font-weight:600;">📅 ' + esc(e.event_name) + '　' + cap + '</div>' +
+                        '<div class="signup-meta">' + esc(e.start_time || '时间待定') + '　·　' + esc(e.location || '线上/线下') +
+                        (e.country ? '　·　🌍 ' + esc(e.country) : '') + '</div>' +
+                        (e.description ? '<div class="signup-meta">' + esc(e.description) + '</div>' : '') + '</div>' +
+                        (full ? '<span class="muted">已满</span>' : '<button class="btn-sm-outline" onclick="signupActivity(' + e.id + ',' + esc(JSON.stringify(e.event_name)) + ')">立即报名</button>') +
+                        '</div>';
+                }).join("") + '</div></div>';
+            } catch (e) { toast("加载活动失败", "err"); }
+        }
+        async function signupActivity(eventId, eventName) {
+            const r = await formBox("报名活动", [
+                { key: "country", label: "意向国家（选填）", type: "select", options: [""].concat(window.verifiedCountries || []) }
+            ], { message: "确认报名：" + eventName + "？将使用你的账号信息报名。", okText: "确认报名" });
+            if (!r) return;
+            try {
+                const d = await apiPost("/api/content/events/register", { event_id: eventId, token: user.token, target_country: r.country });
+                toast(d.msg || "", d.code === 200 ? "ok" : "err");
+                if (d.code === 200) { loadActivities(); loadMyRegs(); }
+            } catch (e) { toast("报名失败", "err"); }
+        }
+        async function loadMyRegs() {
+            try {
+                const d = await apiGet("/api/content/my-registrations");
+                renderTable("myRegBody", [
+                    { key: "id" }, { key: "event_name" }, { key: "start_time", render: r => esc(r.start_time || "—") },
+                    { key: "location", render: r => esc(r.location || "—") },
+                    { key: "status", render: r => statusBadge(r.status) }, { key: "create_time" }
+                ], d.data, "暂无报名记录");
+            } catch (e) {}
+        }
+
+        // ---- 留学方案 ----
+        window.studentPrograms = [];
+
+        async function loadStudentPrograms() {
+            try {
+                const d = await apiGet("/api/content/programs");
+                window.studentPrograms = d.data || [];
+                const countrySelect = document.getElementById("programCountryFilter");
+                const categorySelect = document.getElementById("programCategoryFilter");
+                const currentCountry = countrySelect.value;
+                const currentCategory = categorySelect.value;
+                const countries = Array.from(new Set(window.studentPrograms.map(function (p) { return p.country; }).filter(Boolean))).sort();
+                const categories = Array.from(new Set(window.studentPrograms.map(function (p) { return p.category; }).filter(Boolean))).sort();
+                countrySelect.innerHTML = '<option value="">全部国家</option>' +
+                    countries.map(function (v) { return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }).join("");
+                categorySelect.innerHTML = '<option value="">全部类别</option>' +
+                    categories.map(function (v) { return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }).join("");
+                if (countries.indexOf(currentCountry) >= 0) countrySelect.value = currentCountry;
+                if (categories.indexOf(currentCategory) >= 0) categorySelect.value = currentCategory;
+                renderStudentPrograms();
+            } catch (e) {
+                document.getElementById("studentProgramList").innerHTML =
+                    '<div class="empty-state"><div class="es-text">留学方案加载失败</div></div>';
+            }
+        }
+
+        function renderStudentPrograms() {
+            const country = (document.getElementById("programCountryFilter") || {}).value || "";
+            const category = (document.getElementById("programCategoryFilter") || {}).value || "";
+            const keyword = ((document.getElementById("programKeywordFilter") || {}).value || "").trim().toLowerCase();
+            const rows = window.studentPrograms.filter(function (p) {
+                const text = [p.project_name, p.description, p.target_audience, p.category].join(" ").toLowerCase();
+                return (!country || p.country === country)
+                    && (!category || p.category === category)
+                    && (!keyword || text.indexOf(keyword) >= 0);
+            });
+            const box = document.getElementById("studentProgramList");
+            if (!rows.length) {
+                box.innerHTML = '<div class="empty-state"><div class="es-ico">🌍</div><div class="es-text">没有符合筛选条件的留学方案</div></div>';
+                return;
+            }
+            const canApply = !stageInfo || ["CONSULT", "APPLYING"].indexOf(stageInfo.stage) >= 0;
+            box.innerHTML = '<div class="overview-grid">' + rows.map(function (p) {
+                return '<div class="panel">' +
+                    '<div class="panel-title">' + esc(p.project_name) + '</div>' +
+                    '<div class="signup-meta">' + esc(p.country || "—") + ' · ' + esc(p.category || "—") + '</div>' +
+                    '<p class="panel-desc">' + esc(p.description || "方案详情以顾问说明为准") + '</p>' +
+                    '<div class="info-list">' +
+                    '<div class="info-item"><div class="k">适合人群</div><div class="v">' + esc(p.target_audience || "待顾问评估") + '</div></div></div>' +
+                    '<div class="form-actions">' +
+                    (canApply
+                        ? '<button onclick="applySpecificProgram(' + esc(JSON.stringify(p.id)) + ')">申请此方案</button>'
+                        : '<span class="muted">已入学/毕业，无需再次申请就读</span>') +
+                    '</div></div>';
+            }).join("") + '</div>';
+        }
+
+        function resetProgramFilters() {
+            document.getElementById("programCountryFilter").value = "";
+            document.getElementById("programCategoryFilter").value = "";
+            document.getElementById("programKeywordFilter").value = "";
+            renderStudentPrograms();
+        }
+
+        async function applySpecificProgram(programId) {
+            if (!stageInfo || ["CONSULT", "APPLYING"].indexOf(stageInfo.stage) < 0) {
+                toast("当前学籍阶段不能重复申请就读", "err");
+                return;
+            }
+            const program = window.studentPrograms.find(function (item) { return item.id === programId; });
+            if (!program) { toast("方案不存在", "err"); return; }
+            await loadApplicationOptions();
+            resetApplicationForm();
+            switchPage("application");
+            document.getElementById("applyCountry").value = program.country || "";
+            syncApplyModes();
+            document.getElementById("applyMode").value = program.category || "";
+            syncApplyPrograms();
+            document.getElementById("applyProgram").value = program.project_name || "";
+            document.getElementById("applyRemark").value = "通过「留学方案」选择：" + program.project_name;
+            document.getElementById("applyMsg").className = "form-msg msg-ok";
+            document.getElementById("applyMsg").innerText =
+                "已带入具体方案：" + program.project_name + "。请确认信息后提交就读申请。";
+            document.getElementById("page-application").scrollIntoView({ behavior: "smooth" });
+        }
+
+        // ---- 申请进度 ----
+        async function loadMyApps() {
+            try {
+                const d = await apiGet("/api/application/my");
+                const rows = d.data || [];
+                window.studentApplications = rows;
+                const box = document.getElementById("applicationList");
+                if (window.YJCharts) {
+                    const stageOrder = ["选校定位", "材料准备", "递交申请", "面试/补充", "收到Offer", "办理签证", "行前准备", "已入学"];
+                    YJCharts.funnel("studentApplicationStageChart", studentCountBy(rows, "stage", {}, stageOrder), {
+                        colors: ["#2563eb", "#4f74ed", "#6366f1", "#7c5cf5", "#8b5cf6", "#06b6d4", "#14b8a6", "#22a86b"],
+                        emptyText: "还没有申请记录",
+                        onClick: function (row) {
+                            const filtered = rows.filter(function (item) { return item.stage === row.key; });
+                            openStudentPreview("申请阶段 · " + row.label, "共 " + filtered.length + " 份申请",
+                                applicationPreviewRecords(filtered), "application", "该阶段暂无申请");
+                        }
+                    });
+                }
+                if (!rows.length) {
+                    box.innerHTML = '<div class="empty-state"><div class="es-ico">🎓</div><div class="es-text">还没有申请记录，顾问为你建档后即可在这里查看全程进度</div></div>';
+                    return;
+                }
+                box.innerHTML = rows.map(function (a) {
+                    return '<div class="panel" style="margin-bottom:16px;">' +
+                        '<div class="panel-head"><div><div class="panel-title" style="margin:0;">🎓 ' + esc(a.university || a.country || '留学申请') +
+                        (a.program ? ' · ' + esc(a.program) : '') + '</div>' +
+                        '<div class="signup-meta">当前阶段：<b style="color:#2563eb;">' + esc(a.stage) + '</b>　·　' + statusBadge(a.status) + '</div></div>' +
+                        '<div style="font-weight:700;color:#2563eb;">' + a.progress_pct + '%</div>' +
+                        '<div class="row-actions"><button class="btn-xs btn-sm-outline" onclick="openApplicationArchive(' +
+                        a.id + ',{stage:' + esc(JSON.stringify(a.stage)) + '})">查看完整档案</button>' +
+                        (a.initiator_type === "STUDENT" && a.status === "待受理"
+                            ? '<button class="btn-xs" onclick="editApplication(' + a.id + ')">修改</button><button class="btn-xs btn-danger" onclick="cancelApplication(' + a.id + ')">撤销</button>'
+                            : '') + '</div></div>' +
+                        '<div class="progress-bar"><i style="width:' + a.progress_pct + '%"></i></div>' +
+                        '<div class="signup-meta">申请方式：' + esc(a.initiator_type === "STUDENT" ? "学生主动申请" : "顾问建档") +
+                        (a.application_mode ? ' · 模式：' + esc(a.application_mode) : '') +
+                        (a.material_summary ? ' · 材料 ' + Number(a.material_summary.total || 0) + ' 项，待审核 ' +
+                            Number(a.material_summary.pending_review || 0) + ' 项' : '') + '</div>' +
+                        renderApplicationTimeline(a) + '</div>';
+                }).join("");
+            } catch (e) { toast("加载申请进度失败", "err"); }
+        }
+
+        document.addEventListener("yj-application-changed", function () {
+            if (user) loadMyApps();
+        });
+
+        let applicationOptions = { countries: [], modes: [], programs: [] };
+        let editingApplicationId = 0;
+
+        async function loadApplicationOptions() {
+            const d = await apiGet("/api/application/options");
+            if (d.code !== 200) { toast(d.msg || "加载申请选项失败", "err"); return; }
+            applicationOptions = d.data || applicationOptions;
+            const country = document.getElementById("applyCountry");
+            country.innerHTML = '<option value="">请选择</option>' +
+                applicationOptions.countries.map(function (v) { return '<option>' + esc(v) + '</option>'; }).join("");
+            syncApplyModes();
+        }
+
+        function syncApplyModes() {
+            const country = document.getElementById("applyCountry").value;
+            const modes = Array.from(new Set(applicationOptions.programs
+                .filter(function (p) { return p.country === country; })
+                .map(function (p) { return p.category; })));
+            const mode = document.getElementById("applyMode");
+            mode.innerHTML = '<option value="">请选择</option>' +
+                modes.map(function (v) { return '<option>' + esc(v) + '</option>'; }).join("");
+            syncApplyPrograms();
+        }
+
+        function syncApplyPrograms() {
+            const country = document.getElementById("applyCountry").value;
+            const modeValue = document.getElementById("applyMode").value;
+            const programs = applicationOptions.programs.filter(function (p) {
+                return p.country === country && p.category === modeValue;
+            });
+            document.getElementById("applyProgram").innerHTML = '<option value="">请选择</option>' +
+                programs.map(function (p) { return '<option value="' + esc(p.project_name) + '">' + esc(p.project_name) + '</option>'; }).join("");
+        }
+
+        async function submitStudyApplication() {
+            const msg = document.getElementById("applyMsg");
+            const body = {
+                token: user.token,
+                application_id: editingApplicationId,
+                country: document.getElementById("applyCountry").value,
+                application_mode: document.getElementById("applyMode").value,
+                program: document.getElementById("applyProgram").value,
+                university: document.getElementById("applyUniversity").value.trim(),
+                remark: document.getElementById("applyRemark").value.trim()
+            };
+            if (!body.country || !body.application_mode || !body.program) {
+                msg.className = "form-msg msg-err";
+                msg.innerText = "请完整选择国家、学习模式和申请项目";
+                return;
+            }
+            const d = await apiPost(editingApplicationId ? "/api/application/update" : "/api/application/apply", body);
+            msg.className = "form-msg " + (d.code === 200 ? "msg-ok" : "msg-err");
+            msg.innerText = d.msg || "";
+            if (d.code === 200) {
+                toast(editingApplicationId ? "申请已修改" : "就读申请已提交", "ok");
+                resetApplicationForm();
+                loadMyApps();
+                loadOverview();
+            }
+        }
+
+        function resetApplicationForm() {
+            editingApplicationId = 0;
+            document.getElementById("applyCountry").value = "";
+            document.getElementById("applyMode").innerHTML = '<option value="">请先选择国家</option>';
+            document.getElementById("applyProgram").innerHTML = '<option value="">请先选择模式</option>';
+            document.getElementById("applyUniversity").value = "";
+            document.getElementById("applyRemark").value = "";
+            document.getElementById("applySubmitBtn").innerText = "提交就读申请";
+            document.getElementById("applyCancelEditBtn").style.display = "none";
+        }
+
+        function editApplication(id) {
+            const a = (window.studentApplications || []).find(function (x) { return x.id === id; });
+            if (!a || a.status !== "待受理" || a.initiator_type !== "STUDENT") return;
+            editingApplicationId = id;
+            document.getElementById("applyCountry").value = a.country || "";
+            syncApplyModes();
+            document.getElementById("applyMode").value = a.application_mode || "";
+            syncApplyPrograms();
+            document.getElementById("applyProgram").value = a.program || "";
+            document.getElementById("applyUniversity").value = a.university || "";
+            document.getElementById("applyRemark").value = a.student_remark || "";
+            document.getElementById("applySubmitBtn").innerText = "保存修改";
+            document.getElementById("applyCancelEditBtn").style.display = "inline-block";
+            document.getElementById("applyMsg").innerText = "";
+            document.getElementById("page-application").scrollIntoView({ behavior: "smooth" });
+        }
+
+        async function cancelApplication(id) {
+            if (!await confirmBox("撤销就读申请", "撤销后不能恢复，需要重新提交。确定继续吗？")) return;
+            const d = await apiPost("/api/application/cancel", { token: user.token, application_id: id });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+            if (d.code === 200) { loadMyApps(); loadOverview(); }
+        }
+
+        // ---- 页面切换钩子 ----
+        window.onPageShow = function (id) {
+            if (id === "programs") loadStudentPrograms();
+            else if (id === "leaves") loadMyLeaves();
+            else if (id === "feedback") loadMyFeedbacks();
+            else if (id === "scores") loadMyScores();
+            else if (id === "activities") { loadActivities(); loadMyRegs(); }
+            else if (id === "application") { loadApplicationOptions(); loadMyApps(); }
+            else if (id === "profile") { renderUserCenter("userCenterBox", user); loadMyCountry(); }
+            else if (id === "emotion") loadEmotionRecords();
+            else if (id === "overview") loadOverview();
+        };
+
+        // 同源浏览器里的员工端真实写库后会写入 yj_score_changed，学生页
+        // 无需手动刷新即可收到事件；窗口重新聚焦和定时轮询作为跨浏览器兜底。
+        window.addEventListener("storage", function (event) {
+            if (event.key === "yj_score_changed") loadMyScores();
+            if (event.key === "yj_feedback_changed") {
+                loadMyFeedbacks();
+                loadOverview();
+            }
+            if (event.key === "yj_event_changed") {
+                loadActivities();
+                loadMyRegs();
+                loadOverview();
+            }
+        });
+        window.addEventListener("focus", function () {
+            if (user) loadMyScores();
+            if (user && document.getElementById("page-emotion").classList.contains("active")) loadEmotionRecords();
+        });
+        document.addEventListener("visibilitychange", function () {
+            if (user && document.visibilityState === "visible") loadMyScores();
+        });
+        setInterval(function () {
+            if (user && document.visibilityState === "visible") loadMyScores();
+        }, 10000);
+        setInterval(function () {
+            if (user && document.visibilityState === "visible"
+                    && document.getElementById("page-emotion").classList.contains("active")) {
+                loadEmotionRecords();
+            }
+        }, 20000);
+
+        bindEnter("question", sendQuestion);
+        // 启动
+        const existing = Session.get();
+        const remembered = localStorage.getItem("yj_remember_username");
+        if (remembered) { document.getElementById("loginUser").value = remembered; document.getElementById("rememberUser").checked = true; }
+        if (existing && existing.user_type === "STUDENT") enterWorkspace(existing);
+        else if (existing) Session.clear();
+    </script>
+</body>
+</html>

@@ -1,0 +1,2438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工工作台 · 管理后台</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="static/premium.css">
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand"><span class="logo">🛠️</span> 管理后台 · 员工工作台</div>
+        <div class="nav-links">
+            <a href="index.html">官网首页</a>
+            <span id="notifBellBox"></span>
+            <select id="roleSwitch" onchange="switchRoleView()" title="管理员演示角色切换"
+                    style="display:none;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#0f172a;font-weight:600;">
+                <option value="ADMIN">管理员视图</option>
+                <optgroup label="员工：顾问 / 班主任 / 领导">
+                    <option value="ADVISOR">员工 · 顾问视图</option>
+                    <option value="HOMEROOM">员工 · 班主任视图</option>
+                    <option value="LEADER">员工 · 领导视图</option>
+                </optgroup>
+                <option value="MAINTAINER">维护人员视图</option>
+            </select>
+            <span id="userChip" class="user-chip" style="display:none;"></span>
+            <a onclick="logout()" style="cursor:pointer;">退出登录</a>
+        </div>
+    </div>
+
+    <!-- 登录门禁 -->
+    <div id="loginPanel" class="container">
+        <!-- 首次初始化：库里还没有任何员工账号时显示 -->
+        <div class="card card-sm" id="setupCard" style="display:none;">
+            <h2 class="center">🚀 首次初始化</h2>
+            <p class="center muted" style="font-size:14px;">系统还没有管理员账号，请创建第一个管理员</p>
+            <label for="suUser">管理员账号</label>
+            <input type="text" id="suUser" placeholder="至少 3 个字符，登录时使用" autocomplete="username">
+            <label for="suName">真实姓名</label>
+            <input type="text" id="suName" placeholder="例如：陈老师">
+            <label for="suContact">手机 / 邮箱</label>
+            <input type="text" id="suContact" placeholder="选填，用于内部联系">
+            <label for="suPass">密码 <span class="muted">(至少 8 位)</span></label>
+            <input type="password" id="suPass" placeholder="请设置管理员密码" autocomplete="new-password">
+            <label for="suPass2">确认密码</label>
+            <input type="password" id="suPass2" placeholder="再次输入密码" autocomplete="new-password">
+            <label for="suQuestion">密码找回问题</label>
+            <select id="suQuestion"><option>你的出生城市是？</option><option>你的第一所学校是？</option></select>
+            <label for="suAnswer">安全问题答案</label>
+            <input type="text" id="suAnswer" placeholder="请牢记，用于找回管理员密码">
+            <div id="suCodeWrap" style="display:none;">
+                <label for="suCode">初始化口令</label>
+                <input type="text" id="suCode" placeholder="部署时设置的 YUEJIAO_SETUP_CODE">
+            </div>
+            <button class="btn-block btn-lg" style="margin-top:18px;" onclick="doSetup()">创建管理员并进入</button>
+            <div id="setupMsg" class="form-msg"></div>
+            <p class="login-hint">管理员创建后，可在「用户中心 · 员工账号」里继续添加同事。</p>
+        </div>
+
+        <!-- 日常登录 -->
+        <div class="card card-sm" id="loginCard">
+            <h2 class="center">🔐 员工登录</h2>
+            <p class="center muted" style="font-size:14px;">管理后台仅限员工账号进入</p>
+            <form id="loginForm" autocomplete="on" onsubmit="submitLogin(event)">
+                <label for="loginUser">员工账号</label>
+                <input type="text" id="loginUser" name="username" placeholder="请输入员工账号" autocomplete="username">
+                <label for="loginPass">密码</label>
+                <input type="password" id="loginPass" name="password" placeholder="请输入密码" autocomplete="current-password">
+                <label style="display:flex;gap:8px;align-items:center;margin-top:10px;"><input type="checkbox" id="rememberUser" style="width:auto;"> 记住账号</label>
+                <button type="submit" class="btn-block btn-lg" style="margin-top:18px;">登录后台</button>
+                <p class="center"><a href="#" onclick="forgotPassword();return false;">忘记密码？</a></p>
+                <div id="loginMsg" class="form-msg"></div>
+            </form>
+            <p class="login-hint">账号由机构管理员统一开通，忘记密码请联系管理员重置。密码由浏览器密码管理器安全保存，系统不保存明文密码。学生请前往「学生工作台」登录。</p>
+        </div>
+    </div>
+
+    <!-- 工作台 -->
+    <div id="workspace" class="workspace" style="display:none;">
+        <aside class="ws-side" id="wsSide"></aside>
+        <main class="ws-main">
+
+            <!-- 概览 -->
+            <section class="ws-page active" id="page-overview">
+                <div class="page-head"><div><h2>工作台概览</h2><div class="sub" id="overviewHi">欢迎回来</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadOverview()">刷新</button></div></div>
+                <div class="insight-hero">
+                    <div class="insight-copy">
+                        <div class="insight-eyebrow">OPERATIONS INTELLIGENCE</div>
+                        <h3>业务运营驾驶舱</h3>
+                        <p id="overviewNarrative">正在汇总当前角色可见的学生、线索、预警和服务数据。</p>
+                    </div>
+                    <div class="insight-badge">
+                        <span class="pulse-dot"></span><small>数据状态</small>
+                        <b id="overviewHealth">实时</b>
+                        <small id="overviewHealthText">来自当前业务数据库</small>
+                    </div>
+                </div>
+                <div class="overview-grid" id="overviewStats"></div>
+                <div class="dashboard-grid" id="overviewCharts">
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>待办处置优先级</h4><p>按风险与服务时效排列当前需要处理的事项</p></div><span class="chart-chip">ACTION</span></div>
+                        <div id="adminPriorityChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>学生国家分布</h4><p>按意向国家查看在管学生</p></div><span class="chart-chip">STUDENT</span></div>
+                        <div id="adminCountryChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>心理预警结构</h4><p>风险等级与处理状态</p></div><span class="chart-chip">CARE</span></div>
+                        <div id="adminAlertChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>留学申请阶段</h4><p>申请流程当前停点分布</p></div><span class="chart-chip">APPLICATION</span></div>
+                        <div id="adminAppChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>成绩区间分布</h4><p>按课程成绩区间聚合</p></div><span class="chart-chip">ACADEMIC</span></div>
+                        <div id="adminScoreChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>业务协同树</h4><p>当前角色可用的数据与服务关系</p></div><span class="chart-chip">RBAC</span></div>
+                        <div id="adminOrgTree"></div>
+                    </div>
+                </div>
+                <div class="panel"><div class="panel-title">快捷功能</div>
+                    <div class="quick-grid">
+                        <button type="button" class="quick-tile" data-page="pending" onclick="goAdminPage('pending')"><div class="qt-ico">⏳</div><div class="qt-label">请假审批</div></button>
+                        <button type="button" class="quick-tile" data-page="feedback" onclick="goAdminPage('feedback')"><div class="qt-ico">🛠️</div><div class="qt-label">售后服务</div></button>
+                        <button type="button" class="quick-tile" data-page="events" onclick="goAdminPage('events')"><div class="qt-ico">📅</div><div class="qt-label">活动与报名</div></button>
+                        <button type="button" class="quick-tile" data-page="programs" onclick="goAdminPage('programs')"><div class="qt-ico">🌍</div><div class="qt-label">留学方案</div></button>
+                        <button type="button" class="quick-tile" data-page="alerts" onclick="goAdminPage('alerts')"><div class="qt-ico">🚨</div><div class="qt-label">心理预警</div></button>
+                        <button type="button" class="quick-tile" data-page="students" onclick="goAdminPage('students')"><div class="qt-ico">🎯</div><div class="qt-label">学生档案</div></button>
+                        <button type="button" class="quick-tile" data-page="training" onclick="goAdminPage('training')"><div class="qt-ico">📚</div><div class="qt-label">培养计划</div></button>
+                        <button type="button" class="quick-tile" data-page="chat" onclick="goAdminPage('chat')"><div class="qt-ico">🤖</div><div class="qt-label">员工助手</div></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 员工助手 -->
+            <section class="ws-page" id="page-chat">
+                <div class="page-head"><div><h2>🤖 员工助手</h2><div class="sub">查客户 / 写日报 / 业务统计 / 知识问答</div></div></div>
+                <div class="chat-card ws-chat-card">
+                    <div class="chat-header"><div><div class="title">员工业务助手</div><div class="subtitle">留学业务智能助手</div></div><span class="user-chip" id="empChip"></span></div>
+                    <div id="empChatBox" class="chat-body">
+                        <div class="msg ai"><div class="avatar">粤</div><div class="content"><div class="who">助手</div><div class="bubble">你好！我是员工助手，可以帮你查客户、写日报、做业务统计或解答日常业务问题。</div></div></div>
+                    </div>
+                    <div class="chat-input"><div class="row"><input type="text" id="empQuestion" placeholder="输入你的问题，回车发送"><button onclick="sendEmployee()" id="empSendBtn">发送</button></div><div class="chat-status" id="empStatus"></div></div>
+                </div>
+            </section>
+
+            <!-- 工作日报 -->
+            <section class="ws-page" id="page-reports">
+                <div class="page-head"><div><h2>📝 工作日报</h2><div class="sub">提交本人日报；领导和管理员可查看全部员工日报</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadReports()">刷新</button></div></div>
+                <div class="panel">
+                    <div class="form-grid">
+                        <div><label for="reportDate">日报日期</label><input type="date" id="reportDate"></div>
+                        <div class="full"><label for="reportContent">今日工作内容</label><textarea id="reportContent" rows="4" placeholder="例如：跟进新加坡项目学生材料，完成 3 位家长回访"></textarea></div>
+                    </div>
+                    <div class="form-actions"><button onclick="submitReport()">提交日报</button></div>
+                    <div id="reportMsg" class="form-msg"></div>
+                </div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>员工</th><th>日期</th><th>日报内容</th><th>提交时间</th></tr></thead>
+                    <tbody id="reportBody"><tr><td colspan="5" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+
+            <!-- 请假审批（合并自老师模块） -->
+            <section class="ws-page" id="page-pending">
+                <div class="page-head"><div><h2>⏳ 请假审批</h2><div class="sub">学生提交的请假申请，通过可附留言，驳回须填写理由</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadPending()">刷新</button></div></div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>学生</th><th>起止日期</th><th>理由</th><th>状态</th><th>提交时间</th><th>操作</th></tr></thead>
+                    <tbody id="pendingBody"><tr><td colspan="7" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+
+            <!-- 全部请假 -->
+            <section class="ws-page" id="page-leaves">
+                <div class="page-head"><div><h2>📋 全部请假记录</h2><div class="sub">所有学生的请假历史、审批结果与留言</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadAllLeaves()">刷新</button></div></div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>学生</th><th>起止日期</th><th>理由</th><th>状态</th><th>审批意见/理由</th><th>审批时间</th></tr></thead>
+                    <tbody id="allLeaveBody"><tr><td colspan="7" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+
+            <!-- 售后服务 -->
+            <section class="ws-page" id="page-feedback">
+                <div class="page-head">
+                    <div><h2>🛠️ 售后服务</h2><div class="sub">查看学生售后工单并填写解决方案；管理员/领导看全部，班主任看本班，顾问看本人负责学生</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadFeedbackCountryOptions(); loadFeedbacks()">刷新</button></div>
+                </div>
+                <div class="panel">
+                    <div class="form-grid">
+                        <div><label for="feedbackStatus">处理状态</label><select id="feedbackStatus"><option value="">全部状态</option><option>待处理</option><option>处理中</option><option>已解决</option></select></div>
+                        <div><label for="feedbackCountry">就读国家</label><select id="feedbackCountry"><option value="">全部国家</option></select></div>
+                        <div><label for="feedbackQuery">学生 / 工单内容</label><input id="feedbackQuery" placeholder="姓名、账号或问题内容"></div>
+                        <div style="display:flex;align-items:end;gap:8px;"><button onclick="loadFeedbacks()">查询</button><button class="btn-sm-outline" onclick="resetFeedbackFilters()">重置</button></div>
+                    </div>
+                </div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>学生</th><th>联系方式</th><th>就读国家</th><th>问题内容</th><th>状态</th><th>解决方案</th><th>提交时间</th><th>操作</th></tr></thead>
+                    <tbody id="feedbackBody"><tr><td colspan="9" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+
+            <!-- 活动管理 -->
+            <section class="ws-page" id="page-events">
+                <div class="page-head"><div><h2>📅 活动管理</h2><div class="sub">发布与管理活动讲座，官网与客服页会实时展示</div></div>
+                    <div class="head-actions"><button class="admin-only" onclick="openEventForm()">+ 新增活动</button></div></div>
+                <div class="panel chart-panel">
+                    <div class="chart-panel-head"><div><h4>活动名额使用率</h4><p>实时报名人数与最大名额对比</p></div><span class="chart-chip">LIVE</span></div>
+                    <div id="eventCapacityChart"></div>
+                </div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>活动名称</th><th>类型</th><th>可见对象</th><th>时间</th><th>地点</th><th>国家</th><th>报名/名额</th><th>操作</th></tr></thead>
+                    <tbody id="eventBody"><tr><td colspan="9" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+            <section class="ws-page" id="page-event-signups">
+                <div class="page-head"><div><h2 id="signupTitle">活动报名名单</h2><div class="sub">查看哪些人报名了活动</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="switchPage('events')">返回活动列表</button></div></div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>姓名/学生ID</th><th>联系方式</th><th>意向国家</th><th>状态</th><th>归属线索</th><th>报名时间</th></tr></thead>
+                    <tbody id="signupBody"><tr><td colspan="7" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+            <section class="ws-page" id="page-event-form">
+                <div class="page-head"><div><h2 id="eventFormTitle">新增活动</h2></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="switchPage('events')">返回列表</button></div></div>
+                <div class="panel">
+                    <div class="form-grid">
+                        <div class="full"><label>活动名称 *</label><input type="text" id="evName" placeholder="例如：德国双元制宣讲会"></div>
+                        <div><label>活动类型</label><select id="evType"><option>宣讲会</option><option>展会</option><option>讲座</option><option>其他</option></select></div>
+                        <div><label>可见对象</label><select id="evAudience"><option value="PUBLIC">对外公开</option><option value="STUDENT">学生活动</option><option value="EMPLOYEE">员工内部</option><option value="ALL">所有人</option></select></div>
+                        <div><label>开始日期</label><input type="date" id="evStart"></div>
+                        <div><label>地点</label><input type="text" id="evLocation" placeholder="例如：广州校区 / 线上直播"></div>
+                        <div><label>关联国家</label><input type="text" id="evCountry" placeholder="例如：德国"></div>
+                        <div><label>最多人数</label><input type="number" id="evMax" value="50"></div>
+                        <div class="full"><label>活动简介</label><textarea id="evDesc" rows="3" placeholder="一句话介绍活动亮点"></textarea></div>
+                    </div>
+                    <div class="form-actions"><button onclick="saveEventForm()">保存活动</button></div>
+                    <div id="evMsg" class="form-msg"></div>
+                </div>
+            </section>
+
+            <!-- 留学方案管理 -->
+            <section class="ws-page" id="page-programs">
+                <div class="page-head"><div><h2>🌍 留学方案</h2><div class="sub">查看当前可咨询的留学与升学方向</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadPrograms()">刷新</button></div></div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>方案名称</th><th>国家</th><th>类别</th><th>适合人群</th></tr></thead>
+                    <tbody id="progBody"><tr><td colspan="5" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+
+            <!-- 学生档案：国家 → 留学方案 → 学生 -->
+            <section class="ws-page" id="page-students">
+                <div class="page-head"><div><h2>🎯 学生档案 · 国家与方案</h2><div class="sub">按国家/地区 → 留学方案 → 学生逐层查看；管理员和领导可查看全部学生</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadStudentsByCountry(); loadGraduationPending()">刷新</button></div></div>
+                <div class="panel">
+                    <div class="form-grid">
+                        <div><label for="studentCountryFilter">国家 / 地区</label><select id="studentCountryFilter" onchange="renderStudentGroups()"><option value="">全部国家</option></select></div>
+                        <div><label for="studentProgramFilter">留学方案</label><select id="studentProgramFilter" onchange="renderStudentGroups()"><option value="">全部方案</option></select></div>
+                        <div><label for="studentStageFilter">学籍阶段</label><select id="studentStageFilter" onchange="renderStudentGroups()"><option value="">全部阶段</option><option value="CONSULT">咨询期</option><option value="APPLYING">申请期</option><option value="ENROLLED">在读</option><option value="ALUMNI">已毕业</option></select></div>
+                        <div><label for="studentDurationFilter">培养计划</label><select id="studentDurationFilter" onchange="renderStudentGroups()"><option value="">全部状态</option><option value="pending">学制待补录</option><option value="complete">培养计划完整</option></select></div>
+                        <div><label for="studentKeywordFilter">姓名 / 账号</label><input id="studentKeywordFilter" oninput="renderStudentGroups()" placeholder="输入姓名或账号"></div>
+                        <div style="display:flex;align-items:end;"><button class="btn-sm-outline" onclick="resetStudentFilters()">重置筛选</button></div>
+                    </div>
+                    <p class="panel-desc" style="margin:10px 0 0;">国家与留学方案名称来自 Dify 知识库；学生去向、学制和培养进度来自当前业务数据库。知识库新增国家或方案后，刷新本页即可进入筛选分支。</p>
+                </div>
+                <div class="panel" id="graduationReviewPanel">
+                    <div class="panel-head"><div><div class="panel-title">毕业审核</div>
+                        <p class="panel-desc">毕业申请通过后，系统才会把学籍转为“已毕业”并记录实际毕业日期。</p></div></div>
+                    <div class="tbl-wrap"><table class="data-table">
+                        <thead><tr><th>学生</th><th>项目</th><th>毕业日期</th><th>完成情况</th><th>材料</th><th>提交时间</th><th>操作</th></tr></thead>
+                        <tbody id="graduationPendingBody"><tr><td colspan="7" class="center muted">暂无待审核毕业申请</td></tr></tbody>
+                    </table></div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>国家分布</h4><p>筛选后学生所属意向国家</p></div><span class="chart-chip">GEO</span></div>
+                        <div id="studentCountryChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>学籍阶段</h4><p>咨询、申请、在读与毕业结构</p></div><span class="chart-chip">STAGE</span></div>
+                        <div id="studentStageChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>留学方案分支</h4><p>当前筛选结果对应的具体方案人数</p></div><span class="chart-chip">PROGRAM</span></div>
+                        <div id="studentProgramChart"></div>
+                    </div>
+                </div>
+                <div class="overview-grid" id="countryStats"></div>
+                <div id="stageSummary"></div>
+                <div id="countryGroups"></div>
+            </section>
+
+            <!-- 培养计划集中管理 -->
+            <section class="ws-page" id="page-training">
+                <div class="page-head">
+                    <div><h2>📚 培养计划管理</h2><div class="sub">集中查看学制待确认、预计毕业待补录和培养档案完整的学生</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadTrainingPlans()">刷新</button></div>
+                </div>
+                <div class="panel">
+                    <div class="form-grid">
+                        <div><label for="trainingCountryFilter">国家 / 地区</label><select id="trainingCountryFilter" onchange="renderTrainingPlans()"><option value="">全部国家</option></select></div>
+                        <div><label for="trainingProgramFilter">留学方案</label><select id="trainingProgramFilter" onchange="renderTrainingPlans()"><option value="">全部方案</option></select></div>
+                        <div><label for="trainingStatusFilter">培养档案状态</label><select id="trainingStatusFilter" onchange="renderTrainingPlans()"><option value="pending">待补录</option><option value="">全部在读/毕业学生</option><option value="complete">已完整</option></select></div>
+                        <div><label for="trainingKeywordFilter">姓名 / 账号</label><input id="trainingKeywordFilter" oninput="renderTrainingPlans()" placeholder="输入姓名或账号"></div>
+                        <div style="display:flex;align-items:end;"><button class="btn-sm-outline" onclick="resetTrainingFilters()">重置筛选</button></div>
+                    </div>
+                    <p class="panel-desc" style="margin:10px 0 0;">“学制待确认”会进入这里。点击“补录培养计划”，填写入学日期和标准学制后，后端自动计算预计毕业日期并写入生命周期记录。</p>
+                </div>
+                <div class="overview-grid" id="trainingPlanStats"></div>
+                <div class="panel">
+                    <div class="tbl-wrap"><table class="data-table">
+                        <thead><tr><th>学生</th><th>学籍阶段</th><th>国家/地区</th><th>留学方案</th><th>入学日期</th><th>标准学制</th><th>预计毕业</th><th>状态</th><th>操作</th></tr></thead>
+                        <tbody id="trainingPlanBody"><tr><td colspan="9" class="center muted">加载中...</td></tr></tbody>
+                    </table></div>
+                </div>
+            </section>
+
+            <!-- 心理预警 -->
+            <section class="ws-page" id="page-alerts">
+                <div class="page-head"><div><h2>🚨 心理预警看板</h2><div class="sub">学生在智能助手或心情记录中流露的高危/关注情绪会实时出现在这里</div></div>
+                    <div class="head-actions"><button class="btn-sm-outline" onclick="loadAlerts()">刷新</button></div></div>
+                <div class="dashboard-grid">
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>风险等级</h4><p>高危、中风险与低风险数量</p></div><span class="chart-chip">RISK</span></div>
+                        <div id="alertRiskChart"></div>
+                    </div>
+                    <div class="panel chart-panel">
+                        <div class="chart-panel-head"><div><h4>处理状态</h4><p>未处理与已解决占比</p></div><span class="chart-chip">WORKFLOW</span></div>
+                        <div id="alertStatusChart"></div>
+                    </div>
+                </div>
+                <div class="overview-grid" id="alertStats"></div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>学生</th><th>触发原因</th><th>情绪分</th><th>风险等级</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+                    <tbody id="alertBody"><tr><td colspan="8" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+
+            <!-- 客户线索 -->
+            <section class="ws-page" id="page-leads">
+                <div class="page-head"><div><h2>👥 客户线索</h2><div class="sub">全部意向客户列表</div></div>
+                    <div class="head-actions"><button class="crm-manage-only" onclick="openLeadForm()">+ 录入客户</button><button class="btn-sm-outline" onclick="loadLeads()">刷新</button></div></div>
+                <div class="panel chart-panel">
+                    <div class="chart-panel-head"><div><h4>顾问线索负载</h4><p>按负责人查看当前线索量，辅助管理员进行分配</p></div><span class="chart-chip">WORKLOAD</span></div>
+                    <div id="leadOwnerLoadChart"></div>
+                </div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>客户姓名</th><th>联系方式</th><th>背景</th><th>销售阶段</th><th>负责员工</th><th>跟进</th></tr></thead>
+                    <tbody id="leadBody"><tr><td colspan="7" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+
+            <!-- 申请进度管理 -->
+            <section class="ws-page" id="page-application">
+                <div class="page-head"><div><h2>🎓 申请进度管理</h2><div class="sub">为学生建档并推进申请阶段，学生端实时可见</div></div>
+                    <div class="head-actions"><button class="app-manage-only" onclick="openAppForm()">+ 新建申请</button><button class="btn-sm-outline" onclick="loadAllApps()">刷新</button></div></div>
+                <div class="panel chart-panel">
+                    <div class="chart-panel-head"><div><h4>申请阶段分布</h4><p>每份申请当前所处的流程阶段</p></div><span class="chart-chip">PIPELINE</span></div>
+                    <div id="applicationStageChart"></div>
+                </div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>学生</th><th>国家/院校</th><th>专业</th><th>当前阶段</th><th>进度</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody id="appBody"><tr><td colspan="8" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+
+            <!-- 学生成绩 -->
+            <section class="ws-page" id="page-scores">
+                <div class="page-head"><div><h2>📊 学生成绩</h2><div class="sub">可按学生姓名/账号、国家和课程单独查询，范围由当前角色决定</div></div>
+                    <div class="head-actions"><button class="score-manage-only" onclick="openScoreForm()">+ 录入成绩</button><button class="btn-sm-outline" onclick="loadScores()">刷新</button></div></div>
+                <div class="panel">
+                    <div class="form-grid">
+                        <div><label for="scoreStudentQuery">学生姓名 / 账号</label><input id="scoreStudentQuery" placeholder="例如：林子涵 / student01"></div>
+                        <div><label for="scoreCountry">意向国家</label><select id="scoreCountry"><option value="">全部国家</option></select></div>
+                        <div><label for="scoreCourse">课程名称</label><input id="scoreCourse" placeholder="例如：英语"></div>
+                        <div style="display:flex;align-items:end;gap:8px;"><button onclick="loadScores()">查询成绩</button><button class="btn-sm-outline" onclick="resetScoreFilters()">重置</button></div>
+                    </div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="panel chart-panel span-2">
+                        <div class="chart-panel-head"><div><h4>成绩区间分布</h4><p>当前筛选结果中的课程成绩结构</p></div><span class="chart-chip">SCORE</span></div>
+                        <div id="scoreDistributionChart"></div>
+                    </div>
+                </div>
+                <div class="panel"><div class="tbl-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>学生姓名</th><th>账号</th><th>意向国家</th><th>课程名称</th><th>分数</th><th>学期</th></tr></thead>
+                    <tbody id="scoreBody"><tr><td colspan="7" class="center muted">加载中...</td></tr></tbody>
+                </table></div></div>
+            </section>
+
+            <!-- 用户中心 -->
+            <section class="ws-page" id="page-profile">
+                <div class="page-head"><div><h2>👤 用户中心</h2><div class="sub">个人资料、数据概览与账户安全</div></div></div>
+                <div id="userCenterBox"></div>
+            </section>
+
+            <!-- 用户与角色（仅管理员） -->
+            <section class="ws-page" id="page-users">
+                <div class="page-head"><div><h2>👥 用户与角色</h2><div class="sub">管理学生、顾问、班主任、领导、管理员和维护人员</div></div></div>
+                <div class="panel" id="staffPanel">
+                    <div class="panel-title">后台账号与员工角色</div>
+                    <p class="panel-desc">在这里区分管理员、维护人员，以及业务员工的顾问/班主任/领导子角色。</p>
+                    <div class="tbl-wrap"><table class="data-table">
+                        <thead><tr><th>账号</th><th>姓名</th><th>角色</th><th>部门</th><th>联系方式</th><th>状态</th><th>操作</th></tr></thead>
+                        <tbody id="staffBody"><tr><td colspan="7" class="center muted">加载中...</td></tr></tbody>
+                    </table></div>
+                    <div class="form-actions" style="margin-top:14px;">
+                        <button class="btn-sm-outline" onclick="toggleStaffForm()">+ 新增后台账号</button>
+                    </div>
+                    <div id="staffForm" style="display:none;margin-top:14px;">
+                        <div class="form-grid">
+                            <div><label for="stUser">账号</label><input id="stUser" placeholder="至少 3 个字符"></div>
+                            <div><label for="stName">姓名</label><input id="stName" placeholder="真实姓名"></div>
+                            <div><label for="stContact">手机 / 邮箱</label><input id="stContact" placeholder="选填"></div>
+                            <div><label for="stPass">初始密码</label><input id="stPass" type="password" placeholder="至少 8 位"></div>
+                            <div><label for="stAccountRole">账号角色</label><select id="stAccountRole" onchange="toggleStaffRole()"><option value="EMPLOYEE">业务员工</option><option value="ADMIN">管理员</option><option value="MAINTAINER">维护人员</option></select></div>
+                            <div id="stBusinessRoleWrap"><label for="stBusinessRole">员工子角色</label><select id="stBusinessRole"><option value="ADVISOR">顾问</option><option value="HOMEROOM">班主任</option><option value="LEADER">领导</option></select></div>
+                            <div><label for="stDepartment">部门</label><input id="stDepartment" placeholder="例如：留学服务部"></div>
+                            <div><label for="stQuestion">找回问题</label><select id="stQuestion"><option>你的出生城市是？</option><option>你的第一所学校是？</option></select></div>
+                            <div><label for="stAnswer">安全问题答案</label><input id="stAnswer" placeholder="用于员工找回密码"></div>
+                        </div>
+                        <div class="form-actions">
+                            <button onclick="createStaff()">创建账号</button>
+                            <button class="btn-ghost" onclick="toggleStaffForm()">取消</button>
+                        </div>
+                        <div id="staffMsg" class="form-msg"></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="static/common.js"></script>
+    <script src="static/charts.js"></script>
+    <script>
+        let user = null;
+        let empConversationId = "";
+        // 只保存最近几轮“用户问题”，不把模型回答再喂回模型。
+        // 成绩修改常需要“罗同学雅思成绩 → 改成5.6分”两轮表达，
+        // 后端据此识别学生和课程，但具体分数仍只从本轮消息提取。
+        let empUserHistory = [];
+        let editingEventId = 0;
+        let allowedPages = new Set();
+
+        const navItems = [
+            { id: "overview", icon: "🏠", label: "工作台概览", perm: "business.overview" },
+            { group: "我的工作" },
+            { id: "chat", icon: "🤖", label: "员工助手", perm: "business.overview" },
+            { id: "reports", icon: "📝", label: "工作日报", perm: "report.self" },
+            { id: "pending", icon: "⏳", label: "请假审批", badge: "0", perm: "leave.approve" },
+            { id: "leaves", icon: "📋", label: "全部请假", perm: "leave.read" },
+            { id: "feedback", icon: "🛠️", label: "售后服务", perm: "feedback.resolve" },
+            { group: "内容运营" },
+            // 顾问需要查看本人线索对应的报名并跟进；领导只读；管理员可增删改。
+            // 新增、编辑、删除按钮仍由 content.manage 单独控制。
+            { id: "events", icon: "📅", label: "活动与报名", perm: "event_registration.read" },
+            { id: "programs", icon: "🌍", label: "留学方案", perm: "business.overview" },
+            { group: "数据中心" },
+            { id: "students", icon: "🎯", label: "学生档案", perm: "student.read" },
+            { id: "training", icon: "📚", label: "培养计划", perm: "student.enrollment.manage" },
+            { id: "alerts", icon: "🚨", label: "心理预警", badge: "0", perm: "alert.read" },
+            { id: "leads", icon: "👥", label: "客户线索", perm: "crm.read" },
+            { id: "application", icon: "🎓", label: "申请进度管理", perm: "application.read" },
+            { id: "scores", icon: "📊", label: "学生成绩", perm: "score.read" },
+            { group: "账户" },
+            { id: "users", icon: "👥", label: "用户与角色", perm: "account.manage" },
+            { id: "profile", icon: "👤", label: "用户中心", selfView: true }
+        ];
+
+        // 首次初始化：库里没有员工账号时，先把“创建管理员”摆在登录框前面
+        async function checkSetup() {
+            try {
+                const d = await apiGet("/api/auth/setup-status");
+                if (d.code !== 200) return;
+                if (d.data.needs_setup) {
+                    document.getElementById("setupCard").style.display = "block";
+                    document.getElementById("loginCard").style.display = "none";
+                    if (d.data.require_code) document.getElementById("suCodeWrap").style.display = "block";
+                    document.getElementById("suUser").focus();
+                } else {
+                    document.getElementById("setupCard").style.display = "none";
+                    document.getElementById("loginCard").style.display = "block";
+                }
+            } catch (e) { /* 后端未启动时保持登录框，登录时会给出提示 */ }
+        }
+
+        async function doSetup() {
+            const msg = document.getElementById("setupMsg");
+            const username = document.getElementById("suUser").value.trim();
+            const real_name = document.getElementById("suName").value.trim();
+            const contact_info = document.getElementById("suContact").value.trim();
+            const password = document.getElementById("suPass").value;
+            const password2 = document.getElementById("suPass2").value;
+            const setup_code = document.getElementById("suCode").value.trim();
+            const security_question = document.getElementById("suQuestion").value;
+            const security_answer = document.getElementById("suAnswer").value.trim();
+            if (!username || !password) { msg.className = "form-msg msg-err"; msg.innerText = "请填写账号和密码"; return; }
+            if (username.length < 3) { msg.className = "form-msg msg-err"; msg.innerText = "账号至少 3 个字符"; return; }
+            if (password.length < 8) { msg.className = "form-msg msg-err"; msg.innerText = "管理员密码至少 8 位"; return; }
+            if (password !== password2) { msg.className = "form-msg msg-err"; msg.innerText = "两次输入的密码不一致"; return; }
+            msg.className = "form-msg"; msg.innerText = "正在创建管理员...";
+            try {
+                const d = await apiPost("/api/auth/setup", {
+                    username, password, real_name, contact_info, setup_code,
+                    security_question, security_answer
+                });
+                if (d.code !== 200) { msg.className = "form-msg msg-err"; msg.innerText = d.msg || "初始化失败"; return; }
+                Session.set(d.data);
+                enterWorkspace(d.data);
+                toast("初始化完成，欢迎使用", "ok");
+            } catch (e) {
+                msg.className = "form-msg msg-err"; msg.innerText = "无法连接后端服务，请确认服务已启动";
+            }
+        }
+
+        function submitLogin(event) {
+            // 阻止页面刷新，但仍走标准 form submit，浏览器密码管理器可识别登录行为。
+            event.preventDefault();
+            doLogin();
+        }
+
+        async function doLogin() {
+            const msg = document.getElementById("loginMsg");
+            const username = document.getElementById("loginUser").value.trim();
+            const password = document.getElementById("loginPass").value;
+            if (!username || !password) { msg.className = "form-msg msg-err"; msg.innerText = "请填写账号和密码"; return; }
+            msg.className = "form-msg"; msg.innerText = "正在验证身份...";
+            try {
+                const data = await apiPost("/api/auth/login", { username, password });
+                if (data.code !== 200) { msg.className = "form-msg msg-err"; msg.innerText = data.msg || "登录失败"; return; }
+                const check = await apiPost("/api/auth/verify-admin", { token: data.data.token });
+                if (check.code !== 200) { msg.className = "form-msg msg-err"; msg.innerText = check.msg || "无权访问管理后台"; return; }
+                if (document.getElementById("rememberUser").checked) localStorage.setItem("yj_backoffice_username", username);
+                else localStorage.removeItem("yj_backoffice_username");
+                Session.set(data.data); user = data.data; enterWorkspace(user);
+            } catch (e) { msg.className = "form-msg msg-err"; msg.innerText = "无法连接后端服务，请确认服务已启动"; }
+        }
+
+        // 后端登录响应会返回 permissions。旧会话没有该字段时，用同一角色矩阵兜底，
+        // 避免升级后已登录用户看到空白菜单。
+        const DEFAULT_ROLE_PERMISSIONS = {
+            LEADER: ["business.overview","report.self","report.read_all","recommend.use",
+                "student.read","student.stage.manage","student.enrollment.manage","graduation.manage","crm.read","crm.manage","leave.read",
+                "leave.approve","alert.read","alert.handle","feedback.resolve","score.read",
+                "score.manage","application.read","application.manage","event_registration.read"],
+            ADVISOR: ["business.overview","report.self","recommend.use","student.read",
+                "alert.read","feedback.resolve","crm.read","crm.manage","score.read","score.manage",
+                "application.read","application.manage","event_registration.read"],
+            HOMEROOM: ["business.overview","report.self","recommend.use","student.read","student.enrollment.manage","graduation.manage",
+                "leave.read","leave.approve","alert.read","alert.handle","feedback.resolve",
+                "score.read","score.manage","application.read"],
+            MAINTAINER: ["system.health"],
+            STUDENT: ["student.self","application.self","notification.self","recommend.use"]
+        };
+
+        function currentRoleKey(u) {
+            if (!u) return "";
+            if (u.user_type === "ADMIN" || u.user_type === "MAINTAINER" || u.user_type === "STUDENT") return u.user_type;
+            return u.staff_role || "ADVISOR";
+        }
+
+        function hasPerm(permission) {
+            if (!user) return false;
+            const perms = Array.isArray(user.permissions) && user.permissions.length
+                ? user.permissions : (DEFAULT_ROLE_PERMISSIONS[currentRoleKey(user)] || []);
+            return perms.indexOf("*") >= 0 || perms.indexOf(permission) >= 0;
+        }
+
+        function canViewNavItem(item) {
+            if (item.group) return true;
+            if (item.selfView) return true;
+            if (item.perm) return hasPerm(item.perm);
+            if (item.leaderView) return ["ADMIN", "LEADER"].indexOf(currentRoleKey(user)) >= 0;
+            return false;
+        }
+
+        function filterSidebarItems(items) {
+            const kept = items.filter(canViewNavItem);
+            const cleaned = [];
+            kept.forEach(function (item, index) {
+                if (!item.group) { cleaned.push(item); return; }
+                // 分组标题后必须至少有一个真实菜单，否则不显示空分组。
+                let hasFollowingPage = false;
+                for (let i = index + 1; i < kept.length; i++) {
+                    if (kept[i].group) break;
+                    hasFollowingPage = true;
+                    break;
+                }
+                if (hasFollowingPage) cleaned.push(item);
+            });
+            return cleaned;
+        }
+
+        function enterWorkspace(u) {
+            user = u;
+            document.getElementById("loginPanel").style.display = "none";
+            document.getElementById("workspace").style.display = "flex";
+            const roleText = u.user_type === "ADMIN"
+                ? "管理员"
+                : u.user_type === "MAINTAINER"
+                    ? "维护人员"
+                    : "员工 · " + (u.staff_role_label || "员工");
+            document.getElementById("userChip").textContent = (u.real_name || u.username) + "（" + roleText + "）";
+            document.getElementById("userChip").style.display = "inline-block";
+            const roleSwitch = document.getElementById("roleSwitch");
+            const canSwitchRole = !!u.can_switch_role
+                || (u.user_type === "ADMIN" && !u.is_role_preview);
+            if (roleSwitch) {
+                roleSwitch.style.display = canSwitchRole ? "inline-block" : "none";
+                if (canSwitchRole) {
+                    roleSwitch.value = u.active_role || "ADMIN";
+                    loadRoleSwitchOptions();
+                }
+            }
+            document.getElementById("empChip").textContent = u.real_name || u.username;
+            document.getElementById("overviewHi").textContent =
+                "你好，" + (u.real_name || u.username) +
+                (u.is_role_preview ? "，当前为「" + (u.active_role_label || roleText) + "」演示视图。" : "，请处理今日待办。");
+            let visibleItems = filterSidebarItems(navItems);
+            if (u.user_type === "MAINTAINER") {
+                visibleItems = [{ id: "overview", icon: "🏠", label: "运行状态" }, { group: "账户" }, { id: "profile", icon: "👤", label: "用户中心" }];
+            }
+            allowedPages = new Set(visibleItems.filter(function (it) { return it.id; }).map(function (it) { return it.id; }));
+            // 表单子页不是独立菜单，但只有管理员能通过“新增/编辑”进入。
+            if (hasPerm("content.manage")) {
+                allowedPages.add("event-form");
+            }
+            if (allowedPages.has("events")) allowedPages.add("event-signups");
+            document.querySelectorAll(".quick-tile[data-page]").forEach(function (btn) {
+                btn.style.display = allowedPages.has(btn.getAttribute("data-page")) ? "" : "none";
+            });
+            document.querySelectorAll(".admin-only").forEach(function (el) {
+                el.style.display = hasPerm("content.manage") ? "" : "none";
+            });
+            document.querySelectorAll(".app-manage-only").forEach(function (el) {
+                el.style.display = hasPerm("application.manage") ? "" : "none";
+            });
+            document.querySelectorAll(".crm-manage-only").forEach(function (el) {
+                el.style.display = hasPerm("crm.manage") ? "" : "none";
+            });
+            document.querySelectorAll(".score-manage-only").forEach(function (el) {
+                el.style.display = hasPerm("score.manage") ? "" : "none";
+            });
+            renderWorkspaceSidebar({
+                user: u, roleLabel: roleText, items: visibleItems,
+                foot: "管理工作台 v4", onNavigate: goAdminPage,
+            });
+            renderNotificationBell("notifBellBox", u);
+            loadOverview();
+            // 顾问没有请假权限，登录后不再触发一次注定 403 的请求和错误提示。
+            if (allowedPages.has("pending")) loadPending();
+        }
+
+        async function loadRoleSwitchOptions() {
+            const select = document.getElementById("roleSwitch");
+            if (!select || !user) return;
+            const canSwitchRole = !!user.can_switch_role
+                || (user.user_type === "ADMIN" && !user.is_role_preview);
+            if (!canSwitchRole) return;
+            try {
+                const d = await apiGet("/api/auth/role-options");
+                if (d.code !== 200) return;
+                const options = d.data || [];
+                function optionHtml(item, prefix) {
+                    return '<option value="' + esc(item.role) + '">' +
+                        esc(prefix + item.label) + '视图' +
+                        (item.representative ? ' · ' + esc(item.representative) : '') +
+                        '</option>';
+                }
+                const adminOptions = options.filter(function (item) { return item.group === "ADMIN"; });
+                const employeeOptions = options.filter(function (item) { return item.group === "EMPLOYEE"; });
+                const maintainerOptions = options.filter(function (item) { return item.group === "MAINTAINER"; });
+                select.innerHTML =
+                    adminOptions.map(function (item) { return optionHtml(item, ""); }).join("") +
+                    '<optgroup label="员工：顾问 / 班主任 / 领导">' +
+                    employeeOptions.map(function (item) { return optionHtml(item, "员工 · "); }).join("") +
+                    '</optgroup>' +
+                    maintainerOptions.map(function (item) { return optionHtml(item, ""); }).join("");
+                select.value = user.active_role || "ADMIN";
+            } catch (e) {}
+        }
+
+        async function switchRoleView() {
+            const select = document.getElementById("roleSwitch");
+            if (!select || !user) return;
+            const canSwitchRole = !!user.can_switch_role
+                || (user.user_type === "ADMIN" && !user.is_role_preview);
+            if (!canSwitchRole) return;
+            const targetRole = select.value;
+            const previousRole = user.active_role || "ADMIN";
+            if (targetRole === previousRole) return;
+            select.disabled = true;
+            try {
+                const d = await apiPost("/api/auth/switch-role", {
+                    token: user.token, role: targetRole
+                });
+                if (d.code !== 200) {
+                    select.value = previousRole;
+                    toast(d.msg || "切换角色失败", "err");
+                    return;
+                }
+                // 使用后端新签发的视图令牌，不重新验证密码、不重新登录。
+                user = d.data;
+                empConversationId = "";
+                empUserHistory = [];
+                Session.set(user);
+                switchPage("overview");
+                enterWorkspace(user);
+                toast(d.msg || "角色视图已切换", "ok");
+            } catch (e) {
+                select.value = previousRole;
+                toast("切换角色失败", "err");
+            } finally {
+                select.disabled = false;
+            }
+        }
+
+        function chartRows(payload) {
+            return payload && payload.code === 200 && Array.isArray(payload.data) ? payload.data : [];
+        }
+
+        function countBy(rows, key, labels, order) {
+            const tally = {};
+            (rows || []).forEach(function (row) {
+                const value = String(row[key] || labels.__empty || "未分类");
+                tally[value] = (tally[value] || 0) + 1;
+            });
+            const keys = order || Object.keys(tally);
+            return keys.map(function (key) {
+                return { key: key, label: labels[key] || key, value: tally[key] || 0 };
+            });
+        }
+
+        function scoreBandData(rows) {
+            const buckets = [
+                { label: "90-100", value: 0 },
+                { label: "80-89", value: 0 },
+                { label: "70-79", value: 0 },
+                { label: "60-69", value: 0 },
+                { label: "60以下", value: 0 },
+            ];
+            (rows || []).forEach(function (row) {
+                const n = Number(row.score);
+                if (!isFinite(n)) return;
+                if (n >= 90) buckets[0].value++;
+                else if (n >= 80) buckets[1].value++;
+                else if (n >= 70) buckets[2].value++;
+                else if (n >= 60) buckets[3].value++;
+                else buckets[4].value++;
+            });
+            return buckets;
+        }
+
+        function openAdminPreview(title, subtitle, records, page, emptyText) {
+            showRecordPreview(title, subtitle, records, {
+                emptyText: emptyText || "当前条件下没有明细记录",
+                actionText: page ? "进入模块处理" : "",
+                onAction: page ? function () { goAdminPage(page); } : null
+            });
+        }
+
+        function alertPreviewRecords(rows) {
+            return (rows || []).map(function (row) {
+                return {
+                    title: row.student_name || ("学生#" + row.student_id),
+                    badge: row.risk_level || row.status,
+                    meta: row.trigger_reason || "",
+                    fields: [
+                        ["情绪分", row.emotion_score == null ? "—" : row.emotion_score],
+                        ["风险等级", row.risk_level || "—"],
+                        ["处理状态", row.status || "—"],
+                        ["记录时间", row.create_time || "—"]
+                    ]
+                };
+            });
+        }
+
+        function applicationPreviewRecords(rows) {
+            return (rows || []).map(function (row) {
+                return {
+                    title: row.student_name || ("学生#" + row.student_id),
+                    badge: row.stage || row.status,
+                    meta: (row.university || row.country || "申请方向待定") +
+                        (row.program ? " · " + row.program : ""),
+                    fields: [
+                        ["当前阶段", row.stage || "—"],
+                        ["流程状态", row.status || "—"],
+                        ["完成进度", (row.progress_pct == null ? "—" : row.progress_pct + "%")],
+                        ["最近更新", row.update_time || row.create_time || "—"]
+                    ]
+                };
+            });
+        }
+
+        async function previewPendingLeaves() {
+            const d = await apiGet("/api/teacher/pending-leaves");
+            const rows = d.code === 200 ? (d.data || []) : [];
+            openAdminPreview("P1 · 待审批请假", "共 " + rows.length + " 条待审批记录", rows.map(function (row) {
+                return {
+                    title: row.student_name || ("学生#" + row.student_id),
+                    badge: row.status || "待审批",
+                    fields: [
+                        ["开始时间", row.start_time || "—"],
+                        ["结束时间", row.end_time || "—"],
+                        ["请假原因", row.reason || "—"],
+                        ["提交时间", row.create_time || "—"]
+                    ]
+                };
+            }), "pending", d.msg || "暂无待审批请假");
+        }
+
+        async function previewOpenFeedback() {
+            const d = await apiGet("/api/employee/feedbacks?status=待处理");
+            const rows = d.code === 200 ? (d.data || []) : [];
+            openAdminPreview("P2 · 未解决售后", "共 " + rows.length + " 条待处理记录", rows.map(function (row) {
+                return {
+                    title: row.student_name || ("学生#" + row.student_id),
+                    badge: row.status || "待处理",
+                    meta: row.content || "",
+                    fields: [
+                        ["就读国家", row.study_country || "—"],
+                        ["联系方式", row.student_contact || "—"],
+                        ["处理状态", row.status || "—"],
+                        ["提交时间", row.create_time || "—"]
+                    ]
+                };
+            }), "feedback", d.msg || "暂无未解决售后");
+        }
+
+        function renderOverviewCharts(data) {
+            if (!window.YJCharts) return;
+            const highOpenAlerts = (data.alerts || []).filter(function (row) {
+                return row.risk_level === "高" && row.status !== "已解决";
+            }).length;
+            const activeApplications = (data.apps || []).filter(function (row) {
+                return row.status === "待受理" || row.status === "进行中";
+            }).length;
+            YJCharts.bars("adminPriorityChart", [
+                {
+                    label: "P0 高危未处理预警", value: highOpenAlerts,
+                    color: "#ef4444", hint: "优先联系学生与班主任，确认安全状态"
+                },
+                {
+                    label: "P1 待审批请假", value: Number((data.stats || {})["待审批请假"] || 0),
+                    color: "#f59e0b", hint: "避免影响学生课程与出行安排"
+                },
+                {
+                    label: "P2 未解决售后工单", value: Number((data.stats || {})["待处理售后"] || 0),
+                    color: "#7c5cf5", hint: "按提交时间跟进并填写处理方案"
+                },
+                {
+                    label: "P3 进行中的留学申请", value: activeApplications,
+                    color: "#2563eb", hint: "检查材料、节点与下一步推进时间"
+                }
+            ], {
+                unit: " 项",
+                colors: ["#ef4444", "#f59e0b", "#7c5cf5", "#2563eb"],
+                emptyText: "当前没有需要优先处理的待办",
+                onClick: function (_, index) {
+                    if (index === 0) {
+                        const rows = (data.alerts || []).filter(function (row) {
+                            return row.risk_level === "高" && row.status !== "已解决";
+                        });
+                        openAdminPreview("P0 · 高危未处理预警", "共 " + rows.length + " 条高危待处理记录",
+                            alertPreviewRecords(rows), "alerts", "当前没有高危未处理预警");
+                    } else if (index === 1) {
+                        previewPendingLeaves();
+                    } else if (index === 2) {
+                        previewOpenFeedback();
+                    } else {
+                        const rows = (data.apps || []).filter(function (row) {
+                            return row.status === "待受理" || row.status === "进行中";
+                        });
+                        openAdminPreview("P3 · 进行中的留学申请", "共 " + rows.length + " 份进行中申请",
+                            applicationPreviewRecords(rows), "application", "当前没有进行中的申请");
+                    }
+                }
+            });
+
+            const countryData = (data.countries || []).map(function (row) {
+                return { label: row.country, value: Number(row.count || 0) };
+            });
+            YJCharts.donut("adminCountryChart", countryData, {
+                centerLabel: "学生", colors: ["#2563eb", "#06b6d4", "#7c3aed", "#22c55e", "#f59e0b"],
+                onClick: function (row) {
+                    const group = (data.countries || []).find(function (item) {
+                        return item.country === row.label;
+                    }) || { students: [] };
+                    openAdminPreview("学生国家 · " + row.label, "该国家共 " + group.students.length + " 名学生",
+                        (group.students || []).map(function (student) {
+                            return {
+                                title: student.real_name || student.username,
+                                badge: STAGE_LABEL[(student.lifecycle_stage || "CONSULT").toUpperCase()] || "学生",
+                                fields: [
+                                    ["账号", student.username || "—"],
+                                    ["联系方式", student.contact_info || "—"],
+                                    ["学籍阶段", student.stage_label || student.lifecycle_stage || "—"],
+                                    ["意向国家", student.country || row.label]
+                                ]
+                            };
+                        }), "students", "该国家暂无学生");
+                }
+            });
+
+            const riskData = countBy(data.alerts, "risk_level", {
+                "高": "高风险", "中": "中风险", "低": "低风险"
+            }, ["高", "中", "低"]);
+            YJCharts.bars("adminAlertChart", riskData, {
+                unit: " 条", colors: ["#ef4444", "#f59e0b", "#22c55e"],
+                emptyText: allowedPages.has("alerts") ? "暂无心理预警" : "当前角色无预警权限",
+                onClick: function (row) {
+                    const rows = (data.alerts || []).filter(function (item) {
+                        return item.risk_level === row.key;
+                    });
+                    openAdminPreview(row.label + "预警明细", "共 " + rows.length + " 条记录",
+                        alertPreviewRecords(rows), "alerts", "该风险等级暂无记录");
+                }
+            });
+
+            const stageOrder = ["选校定位", "材料准备", "递交申请", "面试/补充", "收到Offer", "办理签证", "行前准备", "已入学"];
+            const appData = countBy(data.apps, "stage", {}, stageOrder);
+            YJCharts.bars("adminAppChart", appData, {
+                unit: " 份", colors: ["#2563eb", "#4f74ed", "#6366f1", "#7c5cf5", "#8b5cf6", "#06b6d4", "#14b8a6", "#22a86b"],
+                emptyText: allowedPages.has("application") ? "暂无申请档案" : "当前角色无申请查看权限",
+                onClick: function (row) {
+                    const rows = (data.apps || []).filter(function (item) { return item.stage === row.key; });
+                    openAdminPreview("申请阶段 · " + row.label, "共 " + rows.length + " 份申请",
+                        applicationPreviewRecords(rows), "application", "该阶段暂无申请");
+                }
+            });
+
+            const scoreBands = scoreBandData(data.scores);
+            YJCharts.bars("adminScoreChart", scoreBands, {
+                unit: " 条", colors: ["#22a86b", "#3b82f6", "#6366f1", "#f59e0b", "#ef4444"],
+                emptyText: allowedPages.has("scores") ? "暂无成绩数据" : "当前角色无成绩查看权限",
+                onClick: function (row) {
+                    const rows = (data.scores || []).filter(function (item) {
+                        const score = Number(item.score);
+                        if (row.label === "90-100") return score >= 90;
+                        if (row.label === "80-89") return score >= 80 && score < 90;
+                        if (row.label === "70-79") return score >= 70 && score < 80;
+                        if (row.label === "60-69") return score >= 60 && score < 70;
+                        return score < 60;
+                    });
+                    openAdminPreview("成绩区间 · " + row.label, "共 " + rows.length + " 条成绩记录",
+                        rows.map(function (item) {
+                            return {
+                                title: item.student_name || ("学生#" + item.student_id),
+                                badge: item.score + " 分",
+                                meta: item.course_name || "课程",
+                                fields: [
+                                    ["账号", item.student_username || "—"],
+                                    ["意向国家", item.target_country || "—"],
+                                    ["课程", item.course_name || "—"],
+                                    ["学期", item.semester || "—"]
+                                ]
+                            };
+                        }), "scores", "该成绩区间暂无记录");
+                }
+            });
+
+            const groups = [
+                { label: "学生与教学", children: [] },
+                { label: "客户与增长", children: [] },
+                { label: "协同与服务", children: [] },
+            ];
+            if (allowedPages.has("students")) groups[0].children.push({ label: "学生分布" });
+            if (allowedPages.has("scores")) groups[0].children.push({ label: "成绩分析" });
+            if (allowedPages.has("application")) groups[0].children.push({ label: "申请进度" });
+            if (allowedPages.has("leads")) groups[1].children.push({ label: "客户线索" });
+            if (allowedPages.has("events")) groups[1].children.push({ label: "活动报名" });
+            if (allowedPages.has("programs")) groups[1].children.push({ label: "留学方案" });
+            if (allowedPages.has("alerts")) groups[2].children.push({ label: "心理预警" });
+            if (allowedPages.has("feedback")) groups[2].children.push({ label: "售后服务" });
+            if (allowedPages.has("reports")) groups[2].children.push({ label: "工作日报" });
+            const activeGroups = groups.filter(function (group) { return group.children.length; });
+            YJCharts.tree("adminOrgTree", {
+                icon: "粤", label: document.getElementById("empChip").textContent || "当前工作台",
+                hint: "按当前角色实时授权",
+                children: activeGroups
+            }, { compact: true });
+        }
+
+        async function loadOverview() {
+            if (!user) return;
+            if (user.user_type === "MAINTAINER") {
+                const health = await apiGet("/health");
+                const setup = await apiGet("/api/auth/setup-status");
+                document.getElementById("overviewStats").innerHTML =
+                    ovBox(health.status === "ok" ? "正常" : "异常", "后端健康", "ico-green") +
+                    ovBox(setup.data ? setup.data.staff_count : "—", "可用后台账号", "ico-blue");
+                document.getElementById("overviewHi").textContent = "维护人员：仅查看运行状态，不接触学生和客户业务数据。";
+                document.getElementById("overviewNarrative").textContent = "维护视图仅展示系统健康状态，业务隐私数据不会进入当前页面。";
+                document.getElementById("overviewHealth").textContent = health.status === "ok" ? "正常" : "异常";
+                document.getElementById("overviewHealthText").textContent = "系统健康检查";
+                document.getElementById("overviewCharts").style.display = "none";
+                return;
+            }
+            document.getElementById("overviewCharts").style.display = "grid";
+            try {
+                const requests = [
+                    apiGet("/api/auth/profile"),
+                    allowedPages.has("events") ? apiGet("/api/content/events") : Promise.resolve({ data: [] }),
+                    allowedPages.has("leads") ? apiGet("/api/admin/leads") : Promise.resolve({ data: [] }),
+                    allowedPages.has("students") ? apiGet("/api/content/students-by-country") : Promise.resolve({ data: [] }),
+                    allowedPages.has("alerts") ? apiGet("/api/admin/alerts") : Promise.resolve({ data: [] }),
+                    allowedPages.has("application") ? apiGet("/api/application/all") : Promise.resolve({ data: [] }),
+                    allowedPages.has("scores") ? apiGet("/api/admin/scores") : Promise.resolve({ data: [] }),
+                ];
+                const results = await Promise.allSettled(requests);
+                const value = function (index) {
+                    return results[index].status === "fulfilled" ? results[index].value : {};
+                };
+                const p = value(0);
+                const s = (p.code === 200 && p.data.stats) ? p.data.stats : {};
+                const eventRows = chartRows(value(1));
+                const leadRows = chartRows(value(2));
+                const countryRows = chartRows(value(3));
+                const alertRows = chartRows(value(4));
+                const applicationRows = chartRows(value(5));
+                const scoreRows = chartRows(value(6));
+                const cards = [
+                    { ico: "⏳", cls: "ico-amber", n: s["待审批请假"] || 0, l: "待审批请假" },
+                    { ico: "🚨", cls: "ico-rose", n: s["未处理预警"] || 0, l: "未处理预警" },
+                    { ico: "🛠️", cls: "ico-green", n: s["待处理售后"] || 0, l: "待处理售后" },
+                    { ico: "👥", cls: "ico-blue", n: s["学生数"] || 0, l: "学生数" },
+                    { ico: "📅", cls: "ico-purple", n: eventRows.length, l: "活动数" }
+                ];
+                cards[0].page = "pending";
+                cards[1].page = "alerts";
+                cards[2].page = "feedback";
+                cards[3].page = "students";
+                cards[4].page = "events";
+                const visibleCards = cards.filter(function (c) { return allowedPages.has(c.page); });
+                document.getElementById("overviewStats").innerHTML = visibleCards.map(function (c) {
+                    return '<button type="button" class="ov-card ov-link" onclick="goAdminPage(\'' + c.page + '\')"><div class="ov-ico ' + c.cls + '">' + c.ico + '</div><div><div class="ov-num">' + c.n + '</div><div class="ov-label">' + c.l + '</div></div></button>';
+                }).join("");
+                const badge = document.getElementById("badge-pending");
+                if (badge) badge.textContent = s["待审批请假"] || 0;
+                syncAlertBadge(alertRows);
+                const roleName = user.active_role_label || user.role_label || "员工";
+                const leadText = allowedPages.has("leads")
+                    ? ("、" + leadRows.length + " 条客户线索")
+                    : "；当前岗位不承担客户线索";
+                document.getElementById("overviewNarrative").textContent =
+                    roleName + "当前可查看 " + (s["学生数"] || 0) + " 名学生"
+                    + leadText + "，另有 "
+                    + alertRows.filter(function (row) { return row.status !== "已解决"; }).length
+                    + " 条未处理预警。图表会随页面刷新实时更新。";
+                document.getElementById("overviewHealth").textContent = "实时";
+                document.getElementById("overviewHealthText").textContent = "核心接口已同步";
+                renderOverviewCharts({
+                    events: eventRows, leads: leadRows, countries: countryRows,
+                    alerts: alertRows, apps: applicationRows, scores: scoreRows,
+                    stats: s
+                });
+            } catch (e) {}
+        }
+
+        function goAdminPage(id) {
+            if (user && user.user_type === "MAINTAINER") {
+                toast("维护人员仅可查看运行状态", "err");
+                return;
+            }
+            if (!allowedPages.has(id)) { toast("当前账号无权打开该模块", "err"); return; }
+            switchPage(id);
+        }
+
+        // ---- 员工助手 ----
+        async function sendEmployee() {
+            const input = document.getElementById("empQuestion"), status = document.getElementById("empStatus"), btn = document.getElementById("empSendBtn");
+            const q = input.value.trim(); if (!q || !user) return;
+            appendMsg("empChatBox", "你", q); input.value = "";
+            status.innerText = "正在为你查询…"; btn.disabled = true;
+            try {
+                const data = await apiPost("/api/auth/dify-chat", {
+                    token: user.token,
+                    query: q,
+                    conversation_id: empConversationId,
+                    history: empUserHistory.slice(-6).join("\n")
+                });
+                empUserHistory.push(q);
+                empUserHistory = empUserHistory.slice(-6);
+                if (data.code === 200) {
+                    appendMsg("empChatBox", "助手", data.data.answer || "（无回复内容）");
+                    // 结构化业务回答由后端直接查库，不写入 Dify 会话。
+                    // 下次知识问答重新建会话，避免模型沿用旧成绩/客户上下文。
+                    empConversationId = data.data.reset_conversation
+                        ? ""
+                        : (data.data.conversation_id || empConversationId);
+                    // changed 只有后端完成真实 UPDATE/INSERT/DELETE 后才为 true。
+                    // 同源浏览器中的学生页会立即收到 storage 事件；不同浏览器
+                    // 则由学生页定时同步兜底，不能再依赖“看起来像成功”的文案。
+                    if (data.data.changed) {
+                        localStorage.setItem("yj_score_changed", String(Date.now()));
+                        toast("成绩已写入数据库，学生端将自动同步", "ok");
+                    }
+                }
+                else appendMsg("empChatBox", "助手", "出错了：" + (data.msg || "未知错误"));
+            } catch (e) { appendMsg("empChatBox", "助手", "无法连接后端服务"); }
+            finally { status.innerText = ""; btn.disabled = false; }
+        }
+
+        // ---- 工作日报 ----
+        async function loadReports() {
+            const dateInput = document.getElementById("reportDate");
+            if (dateInput && !dateInput.value) {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                dateInput.value = now.toISOString().slice(0, 10);
+            }
+            try {
+                const d = await apiGet("/api/employee/reports");
+                renderTable("reportBody", [
+                    { key: "id" },
+                    { key: "employee_name", render: r => '<strong>' + esc(r.employee_name || r.employee_username || ("员工#" + r.employee_id)) + '</strong><div class="subtext">' + esc(r.employee_username || "") + '</div>' },
+                    { key: "report_date" },
+                    { key: "content" },
+                    { key: "create_time", render: r => esc(r.create_time || "—") }
+                ], d.data, "暂无日报");
+            } catch (e) { toast("加载日报失败", "err"); }
+        }
+
+        async function submitReport() {
+            const content = (document.getElementById("reportContent") || {}).value || "";
+            const reportDate = (document.getElementById("reportDate") || {}).value || "";
+            const msg = document.getElementById("reportMsg");
+            if (!content.trim()) {
+                msg.className = "form-msg msg-err";
+                msg.innerText = "日报内容不能为空";
+                return;
+            }
+            const d = await apiPost("/api/employee/report", {
+                token: user.token, content: content.trim(), report_date: reportDate
+            });
+            msg.className = "form-msg " + (d.code === 200 ? "msg-ok" : "msg-err");
+            msg.innerText = d.msg || "";
+            if (d.code === 200) {
+                document.getElementById("reportContent").value = "";
+                loadReports();
+            }
+        }
+
+        // ---- 请假审批（合并自老师模块）----
+        async function loadPending() {
+            if (!user) return;
+            try {
+                const d = await apiGet("/api/teacher/pending-leaves");
+                renderTable("pendingBody", [
+                    { key: "id" },
+                    { key: "student_name", render: r => '<strong>' + esc(r.student_name || r.student_id) + '</strong><div class="subtext">' + esc(r.student_username || "") + '</div>' },
+                    { key: "range", render: r => esc(r.start_time) + " ~ " + esc(r.end_time) },
+                    { key: "reason" },
+                    { key: "status", render: r => statusBadge(r.status) },
+                    { key: "create_time" },
+                    { key: "op", render: r => '<div class="row-actions"><button class="btn-xs btn-success" onclick="approve(' + r.id + ',true)">通过</button><button class="btn-xs btn-danger" onclick="approve(' + r.id + ',false)">驳回</button></div>' }
+                ], d.data, "暂无待审批请假");
+            } catch (e) { toast("加载失败", "err"); }
+        }
+
+        async function approve(leaveId, ok) {
+            let comment = "";
+            if (ok) {
+                comment = await promptBox("通过请假申请", "可以给这位同学留一句话（选填），例如：好好休息，落下的课老师帮你补。", { placeholder: "给学生的留言（选填）", multiline: true });
+                if (comment === null) return;
+            } else {
+                comment = await promptBox("驳回请假申请", "驳回必须填写理由，学生能看到你填写的内容。", { placeholder: "请填写驳回理由（必填）", required: true, multiline: true });
+                if (comment === null) return;
+            }
+            try {
+                const d = await apiPost("/api/teacher/approve", { token: user.token, leave_id: leaveId, approved: ok, comment: comment });
+                toast(d.msg || "", d.code === 200 ? "ok" : "err");
+                if (d.code === 200) { loadPending(); loadOverview(); }
+            } catch (e) { toast("操作失败", "err"); }
+        }
+
+        async function loadAllLeaves() {
+            if (!user) return;
+            try {
+                const d = await apiGet("/api/teacher/all-leaves");
+                renderTable("allLeaveBody", [
+                    { key: "id" },
+                    { key: "student_name", render: r => esc(r.student_name || r.student_id) },
+                    { key: "range", render: r => esc(r.start_time) + " ~ " + esc(r.end_time) },
+                    { key: "reason" },
+                    { key: "status", render: r => statusBadge(r.status) },
+                    { key: "approver_comment", render: r => esc(r.approver_comment || "—") },
+                    { key: "approve_time", render: r => esc(r.approve_time || "—") }
+                ], d.data, "暂无请假记录");
+            } catch (e) {}
+        }
+
+        // ---- 售后服务 ----
+        async function loadFeedbackCountryOptions() {
+            const select = document.getElementById("feedbackCountry");
+            if (!select) return;
+            const current = select.value;
+            try {
+                const d = await apiGet("/api/employee/feedbacks");
+                const countries = Array.from(new Set(
+                    ((d && d.data) || []).map(function (r) { return r.study_country; }).filter(Boolean)
+                )).sort();
+                select.innerHTML = '<option value="">全部国家</option>' +
+                    countries.map(function (country) {
+                        return '<option value="' + esc(country) + '">' + esc(country) + '</option>';
+                    }).join("");
+                if (countries.indexOf(current) >= 0) select.value = current;
+            } catch (e) {}
+        }
+
+        async function loadFeedbacks() {
+            if (!user) return;
+            try {
+                const params = new URLSearchParams();
+                const status = (document.getElementById("feedbackStatus") || {}).value || "";
+                const country = (document.getElementById("feedbackCountry") || {}).value || "";
+                const keyword = (document.getElementById("feedbackQuery") || {}).value || "";
+                if (status) params.set("status", status);
+                if (country) params.set("study_country", country);
+                if (keyword.trim()) params.set("keyword", keyword.trim());
+                const query = params.toString();
+                const d = await apiGet("/api/employee/feedbacks" + (query ? "?" + query : ""));
+                renderTable("feedbackBody", [
+                    { key: "id" },
+                    { key: "student", render: r => '<strong>' + esc(r.student_name || "未命名") +
+                        '</strong><div class="subtext">' + esc(r.student_username || "") + '</div>' },
+                    { key: "student_contact", render: r => esc(r.student_contact || "—") },
+                    { key: "study_country", render: r => esc(r.study_country || "未关联") },
+                    { key: "content", render: r => '<strong>' + esc(r.content || "—") + '</strong>' +
+                        (r.detail ? '<div class="subtext">' + esc(r.detail) + '</div>' : '') },
+                    { key: "status", render: r => statusBadge(r.status) },
+                    { key: "solution", render: r => esc(r.solution || "—") },
+                    { key: "create_time", render: r => esc(r.create_time || "—") },
+                    { key: "op", render: r => {
+                        if (r.status === "已解决") return '<span class="muted">已处理</span>';
+                        return '<div class="row-actions"><button class="btn-xs btn-success" onclick="resolveFeedbackTicket(' +
+                            r.id + ')">处理并解决</button></div>';
+                    } }
+                ], d.data, "当前范围内暂无售后工单");
+            } catch (e) {
+                toast("加载售后工单失败", "err");
+            }
+        }
+
+        async function resolveFeedbackTicket(ticketId) {
+            const solution = await promptBox(
+                "处理售后工单 #" + ticketId,
+                "请填写本次处理方案，提交后会通知学生。",
+                { required: true, multiline: true, placeholder: "例如：已重新发送学习资料，并电话确认学生收到" }
+            );
+            if (solution === null) return;
+            const d = await apiPut("/api/employee/resolve_feedback", {
+                token: user.token,
+                ticket_id: ticketId,
+                solution: solution
+            });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+            if (d.code === 200) {
+                loadFeedbacks();
+                loadOverview();
+            }
+        }
+
+        function resetFeedbackFilters() {
+            ["feedbackStatus", "feedbackCountry", "feedbackQuery"].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el) el.value = "";
+            });
+            loadFeedbacks();
+        }
+
+        // ---- 活动管理 ----
+        async function loadEvents() {
+            try {
+                const d = await apiGet("/api/content/events");
+                const rows = d.data || [];
+                if (window.YJCharts) {
+                    YJCharts.bars("eventCapacityChart", rows.map(function (event) {
+                        const maximum = Number(event.max_participants || 0);
+                        const current = Number(event.current_participants || 0);
+                        const usage = maximum > 0 ? Math.round(current / maximum * 100) : 0;
+                        return {
+                            label: event.event_name,
+                            value: usage,
+                            hint: current + " / " + (maximum || "不限") + " 人"
+                        };
+                    }), {
+                        unit: "%", colors: ["#2563eb", "#06b6d4", "#7c3aed", "#22a86b", "#f59e0b", "#ef4444"],
+                        emptyText: "暂无活动",
+                        onClick: function (row) {
+                            const event = rows.find(function (item) { return item.event_name === row.label; });
+                            if (!event) return;
+                            openAdminPreview("活动名额 · " + row.label, "报名与容量明细", [{
+                                title: row.label,
+                                badge: event.audience_scope || "PUBLIC",
+                                meta: event.description || "",
+                                fields: [
+                                    ["活动时间", event.start_time || "—"],
+                                    ["活动地点", event.location || "—"],
+                                    ["关联国家", event.country || "—"],
+                                    ["报名人数", (event.current_participants || 0) + " / " + (event.max_participants || "不限")],
+                                    ["剩余名额", event.max_participants ? Math.max(0, event.max_participants - (event.current_participants || 0)) : "不限"]
+                                ]
+                            }], "events", "活动不存在");
+                        }
+                    });
+                }
+                renderTable("eventBody", [
+                    { key: "id" },
+                    { key: "event_name" },
+                    { key: "event_type", render: r => esc(r.event_type || "—") },
+                    { key: "audience_scope", render: r => ({
+                        PUBLIC: "对外公开", STUDENT: "学生活动",
+                        EMPLOYEE: "员工内部", ALL: "所有人"
+                    })[r.audience_scope || "PUBLIC"] || esc(r.audience_scope) },
+                    { key: "start_time", render: r => esc(r.start_time || "—") },
+                    { key: "location", render: r => esc(r.location || "—") },
+                    { key: "country", render: r => esc(r.country || "—") },
+                    { key: "signup", render: r => '<b style="color:#2563eb;">' + esc(r.current_participants || 0) + '</b> / ' + esc(r.max_participants || 0) + ' 人' },
+                    { key: "op", render: r => {
+                        const signup = '<button class="btn-xs btn-success" onclick="viewSignups(' + r.id + ',' + esc(JSON.stringify(r.event_name)) + ')">名单</button>';
+                        if (!hasPerm("content.manage")) return '<div class="row-actions">' + signup + '</div>';
+                        return '<div class="row-actions">' + signup + '<button class="btn-xs" onclick="editEvent(' + r.id + ')">编辑</button><button class="btn-xs btn-danger" onclick="delEvent(' + r.id + ')">删除</button></div>';
+                    } }
+                ], rows, "暂无活动");
+            } catch (e) {}
+        }
+        function openEventForm() {
+            if (!hasPerm("content.manage")) { toast("仅管理员可新增活动", "err"); return; }
+            editingEventId = 0;
+            document.getElementById("eventFormTitle").innerText = "新增活动";
+            ["evName","evStart","evLocation","evCountry","evDesc"].forEach(id => document.getElementById(id).value = "");
+            document.getElementById("evType").value = "宣讲会";
+            document.getElementById("evAudience").value = "PUBLIC";
+            document.getElementById("evMax").value = 50;
+            document.getElementById("evMsg").innerText = "";
+            switchPage("event-form");
+        }
+        async function editEvent(id) {
+            if (!hasPerm("content.manage")) { toast("仅管理员可编辑活动", "err"); return; }
+            const d = await apiGet("/api/content/events");
+            const e = (d.data || []).find(x => x.id === id); if (!e) return;
+            editingEventId = id;
+            document.getElementById("eventFormTitle").innerText = "编辑活动";
+            document.getElementById("evName").value = e.event_name || "";
+            document.getElementById("evType").value = e.event_type || "其他";
+            document.getElementById("evAudience").value = e.audience_scope || "PUBLIC";
+            document.getElementById("evStart").value = e.start_time || "";
+            document.getElementById("evLocation").value = e.location || "";
+            document.getElementById("evCountry").value = e.country || "";
+            document.getElementById("evMax").value = e.max_participants || 0;
+            document.getElementById("evDesc").value = e.description || "";
+            switchPage("event-form");
+        }
+        async function saveEventForm() {
+            if (!hasPerm("content.manage")) { toast("仅管理员可保存活动", "err"); return; }
+            const msg = document.getElementById("evMsg");
+            const name = document.getElementById("evName").value.trim();
+            if (!name) { msg.className = "form-msg msg-err"; msg.innerText = "请填写活动名称"; return; }
+            try {
+                const d = await apiPost("/api/content/events/save", {
+                    token: user.token, event_id: editingEventId, event_name: name,
+                    event_type: document.getElementById("evType").value,
+                    audience_scope: document.getElementById("evAudience").value,
+                    start_time: document.getElementById("evStart").value,
+                    location: document.getElementById("evLocation").value.trim(),
+                    country: document.getElementById("evCountry").value.trim(),
+                    max_participants: Number(document.getElementById("evMax").value) || 0,
+                    description: document.getElementById("evDesc").value.trim()
+                });
+                toast(d.msg || "", d.code === 200 ? "ok" : "err");
+                if (d.code === 200) { loadEvents(); loadOverview(); switchPage("events"); }
+            } catch (e) { toast("保存失败", "err"); }
+        }
+        async function delEvent(id) {
+            if (!hasPerm("content.manage")) { toast("仅管理员可删除活动", "err"); return; }
+            const ok = await confirmBox("删除活动", "确定删除这条活动吗？不可恢复。"); if (!ok) return;
+            const d = await apiPost("/api/content/events/delete", { token: user.token, event_id: id });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err"); if (d.code === 200) { loadEvents(); loadOverview(); }
+        }
+
+        // ---- 留学方案管理 ----
+        async function loadPrograms() {
+            try {
+                const d = await apiGet("/api/content/programs");
+                allStudentPrograms = d.data || [];
+                renderTable("progBody", [
+                    { key: "project_name" },
+                    { key: "country", render: r => esc(r.country || "—") },
+                    { key: "category", render: r => esc(r.category || "—") },
+                    { key: "target_audience", render: r => esc(r.target_audience || "—") },
+                    { key: "description", render: r => esc(r.description || "—") }
+                ], d.data, "暂无方案");
+            } catch (e) {}
+        }
+
+        // ---- 学生国家分布 ----
+        const STAGE_LABELS = ["咨询期", "申请期", "在读", "已毕业"];
+        const STAGE_KEY = { "咨询期": "CONSULT", "申请期": "APPLYING", "在读": "ENROLLED", "已毕业": "ALUMNI" };
+        const STAGE_LABEL = { CONSULT: "咨询期", APPLYING: "申请期", ENROLLED: "在读", ALUMNI: "已毕业" };
+        let allStudentGroups = [];
+        let allStudentPrograms = [];
+
+        async function changeStage(id, name, cur) {
+            if (!hasPerm("student.stage.manage")) { toast("当前角色无权调整学籍阶段", "err"); return; }
+            const nextMap = {
+                CONSULT: ["APPLYING"],
+                APPLYING: ["ENROLLED"],
+                ENROLLED: ["ALUMNI"],
+                ALUMNI: []
+            };
+            const nextKeys = nextMap[cur] || [];
+            const options = nextKeys.map(function (key) {
+                return { value: STAGE_LABEL[key], label: STAGE_LABEL[key] };
+            });
+            const canCorrect = user.user_type === "ADMIN" ||
+                (user.staff_role === "LEADER" && !user.is_role_preview);
+            if (canCorrect) {
+                options.push({ value: "【历史纠错】", label: "历史纠错（必须填写原因）" });
+            }
+            if (!options.length) {
+                toast("当前阶段没有可继续的后续状态，毕业需通过毕业审核", "err");
+                return;
+            }
+            const r = await formBox("调整学籍阶段 · " + (name || ""), [
+                { key: "stage", label: "下一阶段", type: "select", options: options, required: true },
+                { key: "note", label: "备注 / 纠错原因", type: "textarea",
+                  placeholder: "正常流转可写“签证已下，正式入学”；历史纠错必须说明原因" }
+            ], { message: "正常流程只能逐级前进。毕业状态必须经过毕业审核；直接跳阶段属于管理员纠错并会写入生命周期流水。" });
+            if (!r) return;
+            const correction = r.stage === "【历史纠错】";
+            let targetKey = correction ? "" : (STAGE_KEY[r.stage] || "CONSULT");
+            if (correction) {
+                const fix = await formBox("历史阶段纠错 · " + (name || ""), [
+                    { key: "stage", label: "修正后的阶段", type: "select",
+                      options: STAGE_LABELS.filter(function (label) {
+                          return label !== STAGE_LABEL[cur];
+                      }), required: true }
+                ], { message: "历史纠错只允许管理员或领导执行，并会单独记录 ADMIN_CORRECTION 流水。" });
+                if (!fix) return;
+                targetKey = STAGE_KEY[fix.stage] || "";
+            }
+            const d = await apiPost("/api/content/students/stage", {
+                token: user.token, student_id: id,
+                stage: targetKey,
+                note: r.note || "", force: correction,
+                effective_date: new Date().toISOString().slice(0, 10)
+            });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+            if (d.code === 200) {
+                loadStudentsByCountry(); loadGraduationPending(); loadOverview();
+                if (!correction && targetKey === "ENROLLED") {
+                    toast("已进入在读。如项目学制未自动识别，请在学生卡片点击“培养计划”补录。", "ok");
+                }
+            }
+        }
+
+        function setFilterOptions(selectId, allLabel, values) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const current = select.value;
+            const unique = Array.from(new Set((values || []).filter(Boolean)))
+                .sort(function (a, b) { return String(a).localeCompare(String(b), "zh-CN"); });
+            select.innerHTML = '<option value="">' + esc(allLabel) + '</option>' +
+                unique.map(function (value) {
+                    return '<option value="' + esc(value) + '">' + esc(value) + '</option>';
+                }).join("");
+            if (unique.indexOf(current) >= 0) select.value = current;
+        }
+
+        function fillStudentDirectoryOptions() {
+            const countries = allStudentGroups.map(function (g) { return g.country; });
+            const programs = allStudentGroups.flatMap(function (g) {
+                return (g.students || []).map(function (student) { return student.program; });
+            });
+            allStudentPrograms.forEach(function (item) {
+                if (item.country) countries.push(item.country);
+                if (item.project_name) programs.push(item.project_name);
+            });
+            setFilterOptions("studentCountryFilter", "全部国家", countries);
+            setFilterOptions("studentProgramFilter", "全部方案", programs);
+            setFilterOptions("trainingCountryFilter", "全部国家", countries);
+            setFilterOptions("trainingProgramFilter", "全部方案", programs);
+        }
+
+        async function loadStudentsByCountry() {
+            try {
+                // 先展示本地业务数据，避免 Dify 知识库响应慢时拖住学生档案页面。
+                const studentResult = await apiGet("/api/content/students-by-country");
+                if (studentResult.code !== 200) throw new Error(studentResult.msg || "加载失败");
+                allStudentGroups = studentResult.data || [];
+                fillStudentDirectoryOptions();
+                renderStudentGroups();
+                renderTrainingPlans();
+                apiGet("/api/content/programs").then(function (programResult) {
+                    if (programResult.code === 200) {
+                        allStudentPrograms = programResult.data || [];
+                        fillStudentDirectoryOptions();
+                        renderStudentGroups();
+                        renderTrainingPlans();
+                    }
+                }).catch(function () {
+                    // 方案目录是可选增强；知识库不可用不影响已有学生档案。
+                });
+            } catch (e) { toast(e.message || "加载失败", "err"); }
+        }
+
+        function renderStudentGroups() {
+            const country = (document.getElementById("studentCountryFilter") || {}).value || "";
+            const program = (document.getElementById("studentProgramFilter") || {}).value || "";
+            const stage = (document.getElementById("studentStageFilter") || {}).value || "";
+            const duration = (document.getElementById("studentDurationFilter") || {}).value || "";
+            const keyword = ((document.getElementById("studentKeywordFilter") || {}).value || "").trim().toLowerCase();
+            const groups = allStudentGroups.map(function (group) {
+                const students = (group.students || []).filter(function (student) {
+                    const studentStage = (student.lifecycle_stage || "CONSULT").toUpperCase();
+                    const name = (student.real_name || "").toLowerCase();
+                    const username = (student.username || "").toLowerCase();
+                    const durationMatch = !duration ||
+                        (duration === "pending" && student.duration_pending === true) ||
+                        (duration === "complete" && ["ENROLLED", "ALUMNI"].indexOf(studentStage) >= 0
+                            && student.duration_pending !== true);
+                    return (!country || group.country === country)
+                        && (!program || student.program === program)
+                        && (!stage || studentStage === stage)
+                        && durationMatch
+                        && (!keyword || name.indexOf(keyword) >= 0 || username.indexOf(keyword) >= 0);
+                });
+                return { country: group.country, count: students.length, students: students };
+            }).filter(function (group) { return group.students.length > 0; });
+
+            document.getElementById("countryStats").innerHTML = groups.length
+                ? groups.map(function (g, i) {
+                    return '<div class="ov-card"><div class="ov-ico ' + (i % 2 ? "ico-blue" : "ico-green") + '">🌍</div><div><div class="ov-num">' + g.count + '</div><div class="ov-label">' + esc(g.country) + '</div></div></div>';
+                }).join("")
+                : '<div class="muted">没有符合筛选条件的学生</div>';
+
+            const tally = { CONSULT: 0, APPLYING: 0, ENROLLED: 0, ALUMNI: 0 };
+            groups.forEach(function (g) {
+                g.students.forEach(function (s) {
+                    const key = (s.lifecycle_stage || "CONSULT").toUpperCase();
+                    tally[key] = (tally[key] || 0) + 1;
+                });
+            });
+            document.getElementById("stageSummary").innerHTML =
+                '<div class="panel"><div class="panel-title">🎓 学籍阶段分布</div>' +
+                '<p class="panel-desc">国家、留学方案、学籍阶段、培养计划和姓名筛选会同时作用到统计与名单；数据范围由当前角色决定。</p>' +
+                '<div class="overview-grid">' +
+                ["CONSULT", "APPLYING", "ENROLLED", "ALUMNI"].map(function (key, i) {
+                    const cls = ["ico-blue", "ico-amber", "ico-green", "ico-purple"][i];
+                    return '<div class="ov-card"><div class="ov-ico ' + cls + '">' + ["💬", "📄", "🎒", "🎓"][i] + '</div><div><div class="ov-num">' + (tally[key] || 0) + '</div><div class="ov-label">' + STAGE_LABEL[key] + '</div></div></div>';
+                }).join("") + '</div></div>';
+
+            if (window.YJCharts) {
+                YJCharts.donut("studentCountryChart", groups.map(function (group) {
+                    return { label: group.country, value: group.count };
+                }), {
+                    centerLabel: "学生", colors: ["#2563eb", "#06b6d4", "#7c3aed", "#22a86b", "#f59e0b"],
+                    onClick: function (row) {
+                        const group = groups.find(function (item) { return item.country === row.label; }) || { students: [] };
+                        openAdminPreview("学生国家 · " + row.label, "共 " + group.students.length + " 名学生",
+                            group.students.map(function (student) {
+                                return {
+                                    title: student.real_name || student.username,
+                                    badge: student.stage_label || STAGE_LABEL[(student.lifecycle_stage || "CONSULT").toUpperCase()] || "学生",
+                                    fields: [
+                                        ["账号", student.username || "—"],
+                                        ["联系方式", student.contact_info || "—"],
+                                        ["意向国家", student.country || row.label],
+                                        ["学籍阶段", student.stage_label || student.lifecycle_stage || "—"]
+                                    ]
+                                };
+                            }), "students", "该国家暂无学生");
+                    }
+                });
+                YJCharts.bars("studentStageChart", [
+                    { label: "咨询期", value: tally.CONSULT || 0, color: "#2563eb" },
+                    { label: "申请期", value: tally.APPLYING || 0, color: "#f59e0b" },
+                    { label: "在读", value: tally.ENROLLED || 0, color: "#22a86b" },
+                    { label: "已毕业", value: tally.ALUMNI || 0, color: "#7c3aed" }
+                ], {
+                    unit: " 人", emptyText: "暂无学生阶段数据",
+                    onClick: function (row) {
+                        const key = { "咨询期": "CONSULT", "申请期": "APPLYING", "在读": "ENROLLED", "已毕业": "ALUMNI" }[row.label];
+                        const students = groups.flatMap(function (group) { return group.students || []; })
+                            .filter(function (student) {
+                                return (student.lifecycle_stage || "CONSULT").toUpperCase() === key;
+                            });
+                        openAdminPreview("学籍阶段 · " + row.label, "共 " + students.length + " 名学生",
+                            students.map(function (student) {
+                                return {
+                                    title: student.real_name || student.username,
+                                    badge: student.stage_label || row.label,
+                                    fields: [
+                                        ["账号", student.username || "—"],
+                                        ["联系方式", student.contact_info || "—"],
+                                        ["意向国家", student.country || "—"],
+                                        ["学籍阶段", student.stage_label || row.label]
+                                    ]
+                                };
+                            }), "students", "该阶段暂无学生");
+                    }
+                });
+                const programTally = {};
+                groups.forEach(function (group) {
+                    group.students.forEach(function (student) {
+                        const key = student.program || "未关联方案";
+                        programTally[key] = (programTally[key] || 0) + 1;
+                    });
+                });
+                YJCharts.bars("studentProgramChart", Object.keys(programTally)
+                    .map(function (key) {
+                        return { label: key, value: programTally[key], color: "#0f766e" };
+                    })
+                    .sort(function (a, b) { return b.value - a.value; })
+                    .slice(0, 8), {
+                    unit: " 人", emptyText: "暂无留学方案数据",
+                    onClick: function (row) {
+                        const students = groups.flatMap(function (group) { return group.students || []; })
+                            .filter(function (student) { return (student.program || "未关联方案") === row.label; });
+                        openAdminPreview("留学方案 · " + row.label, "共 " + students.length + " 名学生",
+                            students.map(function (student) {
+                                return {
+                                    title: student.real_name || student.username,
+                                    badge: student.stage_label || "学生",
+                                    fields: [
+                                        ["账号", student.username || "—"],
+                                        ["国家/地区", student.country || "—"],
+                                        ["留学方案", student.program || "未关联方案"],
+                                        ["培养计划", student.duration_status || "—"]
+                                    ]
+                                };
+                            }), "students", "该方案暂无学生");
+                    }
+                });
+            }
+
+            document.getElementById("countryGroups").innerHTML = groups.map(function (g) {
+                const byProgram = {};
+                g.students.forEach(function (student) {
+                    const key = student.program || "未关联方案";
+                    (byProgram[key] = byProgram[key] || []).push(student);
+                });
+                return '<div class="panel"><div class="panel-title">🌍 ' + esc(g.country) + '（' + g.count + '人）</div>' +
+                    Object.keys(byProgram).sort(function (a, b) {
+                        return a.localeCompare(b, "zh-CN");
+                    }).map(function (program) {
+                        const students = byProgram[program];
+                        return '<div style="margin:16px 0 8px;padding:10px 12px;border-radius:10px;background:#f1f5f9;">' +
+                            '<strong>📚 ' + esc(program) + '</strong>' +
+                            '<span class="muted" style="margin-left:8px;">' + students.length + ' 人</span></div>' +
+                            '<div class="info-list">' + students.map(function (s) {
+                                const st = (s.lifecycle_stage || "CONSULT").toUpperCase();
+                                const stageAction = hasPerm("student.stage.manage")
+                                    ? '<div class="row-actions"><button class="btn-xs" onclick="changeStage(' + s.id + ', ' + esc(JSON.stringify(s.real_name || s.username)) + ', ' + esc(JSON.stringify(st)) + ')">调整阶段</button></div>'
+                                    : '';
+                                const enrollmentAction = hasPerm("student.enrollment.manage") && ["ENROLLED", "ALUMNI"].indexOf(st) >= 0
+                                    ? '<div class="row-actions"><button class="btn-xs ' + (s.duration_pending ? 'btn-success' : '') + '" onclick="editEnrollment(' +
+                                      s.id + ',' + esc(JSON.stringify(s.real_name || s.username)) + ',' +
+                                      esc(JSON.stringify(s.enrollment_date || "")) + ',' +
+                                      esc(JSON.stringify(s.standard_duration_months || "")) + ',' +
+                                      esc(JSON.stringify(s.expected_graduation_date || "")) + ')">' +
+                                      (s.duration_pending ? "补录学制" : "修正培养计划") + '</button></div>'
+                                    : '';
+                                return '<div class="info-item"><div class="k">' + esc(s.real_name || s.username) +
+                                    ' <span class="stage-tag st-' + st.toLowerCase() + '">' + esc(s.stage_label || STAGE_LABEL[st] || st) + '</span>' +
+                                    (s.duration_pending ? ' <span class="badge badge-wait">学制待补录</span>' : '') + '</div>' +
+                                    '<div class="v">账号：' + esc(s.username || "—") + ' · ' + esc(s.contact_info || "未填联系方式") + '</div>' +
+                                    '<div class="signup-meta">' + esc(s.country_source || "国家/地区") + '：' + esc(s.country || "—") +
+                                    ' · 方案来源：' + esc(s.program_source || "未关联") + '</div>' +
+                                    (["ENROLLED", "ALUMNI"].indexOf(st) >= 0
+                                        ? '<div class="signup-meta">学制：' +
+                                          esc(s.standard_duration_months ? s.standard_duration_months + " 个月" : "待补录") +
+                                          ' · 预计毕业：' + esc(s.expected_graduation_date || "待补录") + '</div>'
+                                        : '') +
+                                    '<div class="row-actions"><button class="btn-xs btn-sm-outline" onclick="viewLifecycle(' +
+                                    s.id + ',' + esc(JSON.stringify(s.real_name || s.username)) + ')">生命周期</button></div>' +
+                                    stageAction + enrollmentAction + '</div>';
+                            }).join("") + '</div>';
+                    }).join("") + '</div>';
+            }).join("") || '<div class="panel muted">没有符合当前条件的国家和留学方案分支。</div>';
+        }
+
+        function resetStudentFilters() {
+            document.getElementById("studentCountryFilter").value = "";
+            document.getElementById("studentProgramFilter").value = "";
+            document.getElementById("studentStageFilter").value = "";
+            document.getElementById("studentDurationFilter").value = "";
+            document.getElementById("studentKeywordFilter").value = "";
+            renderStudentGroups();
+        }
+
+        function trainingPlanRows() {
+            const country = (document.getElementById("trainingCountryFilter") || {}).value || "";
+            const program = (document.getElementById("trainingProgramFilter") || {}).value || "";
+            const status = (document.getElementById("trainingStatusFilter") || {}).value || "";
+            const keyword = ((document.getElementById("trainingKeywordFilter") || {}).value || "").trim().toLowerCase();
+            return allStudentGroups.flatMap(function (group) {
+                return group.students || [];
+            }).filter(function (student) {
+                const stage = (student.lifecycle_stage || "CONSULT").toUpperCase();
+                const name = (student.real_name || "").toLowerCase();
+                const username = (student.username || "").toLowerCase();
+                return ["ENROLLED", "ALUMNI"].indexOf(stage) >= 0
+                    && (!country || student.country === country)
+                    && (!program || student.program === program)
+                    && (!status || (status === "pending" && student.duration_pending === true)
+                        || (status === "complete" && student.duration_pending !== true))
+                    && (!keyword || name.indexOf(keyword) >= 0 || username.indexOf(keyword) >= 0);
+            }).sort(function (a, b) {
+                return Number(b.duration_pending === true) - Number(a.duration_pending === true)
+                    || String(a.real_name || a.username).localeCompare(String(b.real_name || b.username), "zh-CN");
+            });
+        }
+
+        function renderTrainingPlans() {
+            const body = document.getElementById("trainingPlanBody");
+            const stats = document.getElementById("trainingPlanStats");
+            if (!body || !stats) return;
+            const rows = trainingPlanRows();
+            const pending = rows.filter(function (row) { return row.duration_pending === true; }).length;
+            const complete = rows.filter(function (row) { return row.duration_pending !== true; }).length;
+            stats.innerHTML =
+                '<div class="ov-card"><div class="ov-ico ico-amber">⏳</div><div><div class="ov-num">' + pending + '</div><div class="ov-label">学制待补录</div></div></div>' +
+                '<div class="ov-card"><div class="ov-ico ico-green">✅</div><div><div class="ov-num">' + complete + '</div><div class="ov-label">培养计划完整</div></div></div>' +
+                '<div class="ov-card"><div class="ov-ico ico-blue">🎒</div><div><div class="ov-num">' + rows.length + '</div><div class="ov-label">当前筛选学生</div></div></div>';
+            if (!rows.length) {
+                body.innerHTML = '<tr><td colspan="9" class="center muted">当前筛选条件下没有培养计划记录</td></tr>';
+                return;
+            }
+            body.innerHTML = rows.map(function (student) {
+                return '<tr>' +
+                    '<td><strong>' + esc(student.real_name || student.username) + '</strong><br><span class="muted">' + esc(student.username || "—") + '</span></td>' +
+                    '<td><span class="stage-tag st-' + String(student.lifecycle_stage || "").toLowerCase() + '">' + esc(student.stage_label || "—") + '</span></td>' +
+                    '<td>' + esc(student.country || "—") + '<br><span class="muted">' + esc(student.country_source || "") + '</span></td>' +
+                    '<td>' + esc(student.program || "未关联方案") + '<br><span class="muted">' + esc(student.program_source || "") + '</span></td>' +
+                    '<td>' + esc(student.enrollment_date || "待补录") + '</td>' +
+                    '<td>' + esc(student.standard_duration_months ? student.standard_duration_months + " 个月" : "待补录") + '</td>' +
+                    '<td>' + esc(student.expected_graduation_date || "待补录") + '</td>' +
+                    '<td>' + (student.duration_pending
+                        ? '<span class="badge badge-wait">待补录</span>'
+                        : '<span class="badge badge-ok">已完整</span>') + '</td>' +
+                    '<td><button class="btn-xs ' + (student.duration_pending ? 'btn-success' : '') + '" onclick="editEnrollment(' +
+                        student.id + ',' + esc(JSON.stringify(student.real_name || student.username)) + ',' +
+                        esc(JSON.stringify(student.enrollment_date || "")) + ',' +
+                        esc(JSON.stringify(student.standard_duration_months || "")) + ',' +
+                        esc(JSON.stringify(student.expected_graduation_date || "")) + ')">' +
+                        (student.duration_pending ? "补录培养计划" : "修正培养计划") + '</button>' +
+                        '<button class="btn-xs btn-sm-outline" onclick="viewLifecycle(' + student.id + ',' +
+                        esc(JSON.stringify(student.real_name || student.username)) + ')">查看生命周期</button></td>' +
+                    '</tr>';
+            }).join("");
+        }
+
+        function resetTrainingFilters() {
+            document.getElementById("trainingCountryFilter").value = "";
+            document.getElementById("trainingProgramFilter").value = "";
+            document.getElementById("trainingStatusFilter").value = "";
+            document.getElementById("trainingKeywordFilter").value = "";
+            renderTrainingPlans();
+        }
+
+        async function loadTrainingPlans() {
+            await loadStudentsByCountry();
+            renderTrainingPlans();
+        }
+
+        async function viewLifecycle(studentId, studentName) {
+            const d = await apiGet("/api/lifecycle/" + studentId);
+            if (d.code !== 200) { toast(d.msg || "生命周期加载失败", "err"); return; }
+            const lc = d.data || {};
+            const enrollment = lc.enrollment || {};
+            const missing = (lc.completeness && lc.completeness.missing) || [];
+            const events = (lc.lifecycle_events || []).map(function (event) {
+                return {
+                    title: (STAGE_LABEL[event.from_stage] || event.from_stage || "未记录") +
+                        " → " + (STAGE_LABEL[event.to_stage] || event.to_stage),
+                    badge: event.source_type || "MANUAL",
+                    fields: [
+                        ["生效日期", event.effective_date || "待补录"],
+                        ["原因", event.reason || "—"],
+                        ["操作人角色", event.operator_role || "—"],
+                        ["记录时间", event.create_time || "—"]
+                    ]
+                };
+            });
+            showRecordPreview(studentName + " · 生命周期", "当前阶段：" +
+                (lc.stage_label || "—") + (missing.length ? " · 待补录：" + missing.join("、") : " · 资料完整"), [{
+                title: enrollment.program || "入学档案待建立",
+                badge: enrollment.completeness_status || "PENDING",
+                fields: [
+                    ["国家/地区", enrollment.country || "—"],
+                    ["入学日期", enrollment.enrollment_date || "待补录"],
+                    ["标准学制", enrollment.duration_text ||
+                        (enrollment.standard_duration_months ? enrollment.standard_duration_months + " 个月" : "待补录")],
+                    ["预计毕业", enrollment.expected_graduation_date || "待补录"],
+                    ["实际毕业", enrollment.actual_graduation_date || "—"],
+                    ["培养进度", enrollment.study_progress_pct == null ? "—" : enrollment.study_progress_pct + "%"]
+                ]
+            }].concat(events), { emptyText: "暂无生命周期流水" });
+        }
+
+        async function editEnrollment(studentId, studentName, enrollmentDate, durationMonths,
+                                      expectedGraduation) {
+            if (!hasPerm("student.enrollment.manage")) {
+                toast("当前角色无权维护培养计划", "err"); return;
+            }
+            const r = await formBox("维护培养计划 · " + studentName, [
+                { key: "enrollment_date", label: "入学日期", type: "date",
+                  value: enrollmentDate || new Date().toISOString().slice(0, 10), required: true },
+                { key: "duration_months", label: "标准学制（月）", type: "number",
+                  value: durationMonths || "", required: true, placeholder: "例如：48" },
+                { key: "duration_text", label: "学制说明", value: "",
+                  placeholder: "例如：2+2 本科，按 4 年培养计划" },
+                { key: "note", label: "补录原因", type: "textarea",
+                  placeholder: "例如：班主任根据录取通知和培养方案补录" }
+            ], {
+                message: "预计毕业日期由后端根据入学日期和标准学制自动计算。" +
+                    (expectedGraduation ? " 当前预计毕业：" + expectedGraduation : ""),
+                okText: "保存培养计划"
+            });
+            if (!r) return;
+            const d = await apiPost("/api/lifecycle/" + studentId + "/enrollment", {
+                token: user.token,
+                enrollment_date: r.enrollment_date,
+                duration_months: Number(r.duration_months),
+                duration_text: r.duration_text,
+                note: r.note
+            });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+            if (d.code === 200) { loadStudentsByCountry(); loadGraduationPending(); }
+        }
+
+        async function loadGraduationPending() {
+            const panel = document.getElementById("graduationReviewPanel");
+            if (!panel) return;
+            if (!hasPerm("graduation.manage")) {
+                panel.style.display = "none";
+                return;
+            }
+            panel.style.display = "block";
+            const d = await apiGet("/api/lifecycle/graduation/pending");
+            const rows = d.code === 200 ? (d.data || []) : [];
+            renderTable("graduationPendingBody", [
+                { key: "student_name", render: r => '<strong>' + esc(r.student_name || r.student_username) + '</strong>' },
+                { key: "program", render: r => esc(r.program || "—") },
+                { key: "graduation_date", render: r => esc(r.graduation_date || "—") },
+                { key: "completion_summary", render: r => esc(r.completion_summary || "—") },
+                { key: "document_ref", render: r => esc(r.document_ref || "—") },
+                { key: "create_time" },
+                { key: "op", render: r => '<div class="row-actions">' +
+                    '<button class="btn-xs btn-success" onclick="reviewGraduation(' + r.id + ',true)">通过</button>' +
+                    '<button class="btn-xs btn-danger" onclick="reviewGraduation(' + r.id + ',false)">驳回</button></div>' }
+            ], rows, "暂无待审核毕业申请");
+        }
+
+        async function reviewGraduation(requestId, approved) {
+            let note = "";
+            if (!approved) {
+                note = await promptBox("驳回毕业申请", "请填写驳回原因，学生可以看到。", { required: true, multiline: true });
+                if (note === null) return;
+            } else {
+                note = await promptBox("通过毕业审核", "可填写审核备注（选填）。", { multiline: true });
+                if (note === null) return;
+            }
+            const d = await apiPost("/api/lifecycle/graduation/review", {
+                token: user.token, request_id: requestId,
+                approved: approved, review_note: note
+            });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+            if (d.code === 200) { loadGraduationPending(); loadStudentsByCountry(); loadOverview(); }
+        }
+
+        // ---- 心理预警 ----
+        function syncAlertBadge(rows) {
+            const badge = document.getElementById("badge-alerts");
+            if (!badge) return;
+            const highRiskOpen = (rows || []).filter(function (row) {
+                return row.status !== "已解决" && row.risk_level === "高";
+            }).length;
+            badge.textContent = highRiskOpen;
+            badge.title = highRiskOpen ? highRiskOpen + " 条未解决高危预警" : "暂无未解决高危预警";
+            badge.setAttribute("aria-label", badge.title);
+        }
+
+        async function loadAlerts() {
+            try {
+                const d = await apiGet("/api/admin/alerts");
+                const rows = (d && d.data) || [];
+                syncAlertBadge(rows);
+                const high = rows.filter(r => r.risk_level === "高").length;
+                const open = rows.filter(r => r.status !== "已解决").length;
+                document.getElementById("alertStats").innerHTML =
+                    ovBox(rows.length, "预警总数", "ico-blue") + ovBox(high, "高危等级", "ico-rose") + ovBox(open, "未处理", "ico-amber");
+                if (window.YJCharts) {
+                    YJCharts.donut("alertRiskChart", [
+                        { label: "高风险", value: rows.filter(r => r.risk_level === "高").length, color: "#ef4444" },
+                        { label: "中风险", value: rows.filter(r => r.risk_level === "中").length, color: "#f59e0b" },
+                        { label: "低风险", value: rows.filter(r => r.risk_level === "低").length, color: "#22a86b" }
+                    ], {
+                        centerLabel: "预警", emptyText: "暂无预警",
+                        onClick: function (row) {
+                            const risk = { "高风险": "高", "中风险": "中", "低风险": "低" }[row.label];
+                            const filtered = rows.filter(function (item) { return item.risk_level === risk; });
+                            openAdminPreview(row.label + "预警明细", "共 " + filtered.length + " 条记录",
+                                alertPreviewRecords(filtered), "alerts", "该风险等级暂无预警");
+                        }
+                    });
+                    YJCharts.bars("alertStatusChart", [
+                        { label: "未处理", value: rows.filter(r => r.status !== "已解决").length, color: "#ef4444" },
+                        { label: "已解决", value: rows.filter(r => r.status === "已解决").length, color: "#22a86b" }
+                    ], {
+                        unit: " 条", emptyText: "暂无处理数据",
+                        onClick: function (row) {
+                            const filtered = rows.filter(function (item) {
+                                return row.label === "未处理" ? item.status !== "已解决" : item.status === "已解决";
+                            });
+                            openAdminPreview("预警处理状态 · " + row.label, "共 " + filtered.length + " 条记录",
+                                alertPreviewRecords(filtered), "alerts", "当前状态下暂无预警");
+                        }
+                    });
+                }
+                renderTable("alertBody", [
+                    { key: "id" },
+                    { key: "student_name", render: r => esc(r.student_name || r.student_id) },
+                    { key: "trigger_reason" },
+                    { key: "emotion_score", render: r => '<b style="color:' + (Number(r.emotion_score) >= 70 ? '#dc2626' : '#d97706') + ';">' + esc(r.emotion_score == null ? "—" : r.emotion_score) + '</b>' },
+                    { key: "risk_level", render: r => statusBadge(r.risk_level) },
+                    { key: "status", render: r => statusBadge(r.status) },
+                    { key: "create_time" },
+                    { key: "op", render: r => {
+                        if (r.status === "已解决") return '<span class="muted">已处理</span>';
+                        if (!hasPerm("alert.handle")) return '<span class="muted">只读</span>';
+                        return '<div class="row-actions"><button class="btn-xs btn-success" onclick="handleAlert(' + r.id + ')">标记已处理</button></div>';
+                    } }
+                ], rows, "暂无预警记录");
+            } catch (e) {}
+        }
+        async function handleAlert(id) {
+            const note = await promptBox("处理心理预警", "可填写处理备注（如已电话安抚、持续关注）。", { placeholder: "处理备注", multiline: true });
+            if (note === null) return;
+            const d = await apiPost("/api/content/alert/handle", { token: user.token, alert_id: id, note: note });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err"); if (d.code === 200) { loadAlerts(); loadOverview(); }
+        }
+        function ovBox(n, label, cls) { return '<div class="ov-card"><div class="ov-ico ' + cls + '">📊</div><div><div class="ov-num">' + n + '</div><div class="ov-label">' + label + '</div></div></div>'; }
+
+        // ---- 客户线索 / 成绩 ----
+        async function loadLeads() {
+            try {
+                const d = await apiGet("/api/admin/leads");
+                const rows = d.data || [];
+                if (window.YJCharts) {
+                    const ownerTally = {};
+                    rows.forEach(function (row) {
+                        const owner = row.owner_name || ("员工#" + row.owner_employee_id);
+                        ownerTally[owner] = (ownerTally[owner] || 0) + 1;
+                    });
+                    YJCharts.bars("leadOwnerLoadChart", Object.keys(ownerTally).map(function (owner) {
+                        return { label: owner, value: ownerTally[owner] };
+                    }), {
+                        unit: " 条",
+                        colors: ["#2563eb", "#06b6d4", "#7c3aed", "#22a86b", "#f59e0b"],
+                        emptyText: "暂无客户线索",
+                        onClick: function (row) {
+                            const owned = rows.filter(function (item) {
+                                return (item.owner_name || ("员工#" + item.owner_employee_id)) === row.label;
+                            });
+                            openAdminPreview("顾问线索负载 · " + row.label,
+                                "当前共负责 " + owned.length + " 条客户线索",
+                                owned.map(function (item) {
+                                    return {
+                                        title: item.customer_name || "未命名客户",
+                                        badge: item.status || "新增意向",
+                                        meta: item.background_info || "",
+                                        fields: [
+                                            ["联系方式", item.contact_info || "—"],
+                                            ["销售阶段", item.status || "—"],
+                                            ["最近更新", item.update_time || item.create_time || "—"],
+                                            ["线索来源", item.source_event_id ? "活动 #" + item.source_event_id : "官网/人工录入"]
+                                        ]
+                                    };
+                                }), "leads", "该顾问暂无客户线索");
+                        }
+                    });
+                }
+                renderTable("leadBody", [
+                    { key: "id" }, { key: "customer_name" }, { key: "contact_info" },
+                    { key: "background_info", render: r => esc(r.background_info || "—") },
+                    { key: "status", render: r => statusBadge(r.status) },
+                    { key: "owner_name", render: r => esc(r.owner_name || ("员工#" + r.owner_employee_id)) },
+                    { key: "op", render: r => '<div class="row-actions"><button class="btn-xs" onclick="followLead(' + r.id + ',' + esc(JSON.stringify(r.customer_name)) + ',' + esc(JSON.stringify(r.status)) + ')">跟进</button></div>' }
+                ], rows, "暂无客户线索");
+            } catch (e) {}
+        }
+        async function openLeadForm() {
+            if (!hasPerm("crm.manage")) { toast("当前角色无权录入客户", "err"); return; }
+            const r = await formBox("录入意向客户", [
+                { key: "customer_name", label: "客户姓名", required: true },
+                { key: "contact_info", label: "联系方式", required: true, placeholder: "手机号或邮箱" },
+                { key: "background_info", label: "客户背景与意向", type: "textarea", placeholder: "例如：高中毕业，意向新加坡本科" },
+                { key: "follow_up_history", label: "已有沟通记录", type: "textarea", placeholder: "例如：首次电话沟通，家长关注费用与住宿" }
+            ], { okText: "保存客户" });
+            if (!r) return;
+            const d = await apiPost("/api/employee/add_lead", {
+                token: user.token,
+                customer_name: r.customer_name,
+                contact_info: r.contact_info,
+                owner_employee_id: 0,
+                background_info: r.background_info,
+                follow_up_history: r.follow_up_history
+            });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+            if (d.code === 200) loadLeads();
+        }
+        async function loadScoreCountryOptions() {
+            const select = document.getElementById("scoreCountry");
+            if (!select) return;
+            const current = select.value;
+            try {
+                const d = await apiGet("/api/content/students-by-country");
+                const countries = ((d && d.data) || []).map(function (g) { return g.country; });
+                select.innerHTML = '<option value="">全部国家</option>' +
+                    countries.map(function (country) {
+                        return '<option value="' + esc(country) + '">' + esc(country) + '</option>';
+                    }).join("");
+                if (countries.indexOf(current) >= 0) select.value = current;
+            } catch (e) {}
+        }
+
+        async function loadScores() {
+            try {
+                const params = new URLSearchParams();
+                const keyword = (document.getElementById("scoreStudentQuery") || {}).value || "";
+                const country = (document.getElementById("scoreCountry") || {}).value || "";
+                const course = (document.getElementById("scoreCourse") || {}).value || "";
+                if (keyword.trim()) params.set("keyword", keyword.trim());
+                if (country) params.set("country", country);
+                if (course.trim()) params.set("course_name", course.trim());
+                const query = params.toString();
+                const d = await apiGet("/api/admin/scores" + (query ? "?" + query : ""));
+                const rows = d.data || [];
+                if (window.YJCharts) {
+                    YJCharts.bars("scoreDistributionChart", scoreBandData(rows), {
+                        unit: " 条", colors: ["#22a86b", "#3b82f6", "#6366f1", "#f59e0b", "#ef4444"],
+                        emptyText: "暂无成绩数据",
+                        onClick: function (row) {
+                            const filtered = rows.filter(function (item) {
+                                const score = Number(item.score);
+                                if (row.label === "90-100") return score >= 90;
+                                if (row.label === "80-89") return score >= 80 && score < 90;
+                                if (row.label === "70-79") return score >= 70 && score < 80;
+                                if (row.label === "60-69") return score >= 60 && score < 70;
+                                return score < 60;
+                            });
+                            openAdminPreview("成绩区间 · " + row.label, "共 " + filtered.length + " 条成绩记录",
+                                filtered.map(function (item) {
+                                    return {
+                                        title: item.student_name || ("学生#" + item.student_id),
+                                        badge: item.score + " 分",
+                                        meta: item.course_name || "课程",
+                                        fields: [
+                                            ["账号", item.student_username || "—"],
+                                            ["意向国家", item.target_country || "—"],
+                                            ["课程", item.course_name || "—"],
+                                            ["学期", item.semester || "—"]
+                                        ]
+                                    };
+                                }), "scores", "该成绩区间暂无记录");
+                        }
+                    });
+                }
+                renderTable("scoreBody", [
+                    { key: "id" },
+                    { key: "student_name", render: r => '<strong>' + esc(r.student_name || "未命名") + '</strong>' },
+                    { key: "student_username", render: r => esc(r.student_username || "—") },
+                    { key: "target_country", render: r => esc(r.target_country || "未填写") },
+                    { key: "course_name" },
+                    { key: "score" },
+                    { key: "semester", render: r => esc(r.semester || "—") }
+                ], rows, "暂无成绩记录");
+            } catch (e) {}
+        }
+
+        async function openScoreForm() {
+            if (!hasPerm("score.manage")) { toast("当前角色无权录入成绩", "err"); return; }
+            const d = await apiGet("/api/auth/users?role=STUDENT");
+            const students = d.data || [];
+            if (!students.length) { toast("当前范围没有可录入成绩的学生", "err"); return; }
+            const r = await formBox("录入学生成绩", [
+                {
+                    key: "student",
+                    label: "学生",
+                    type: "select",
+                    options: students.map(function (s) {
+                        return (s.real_name || s.username) + "（" + s.username + "）#" + s.id;
+                    }),
+                    required: true
+                },
+                { key: "course_name", label: "课程名称", required: true },
+                { key: "score", label: "成绩（0-100）", type: "number", required: true },
+                { key: "semester", label: "学期", placeholder: "例如：2026秋季" }
+            ], { okText: "保存成绩" });
+            if (!r) return;
+            const studentId = Number((String(r.student).match(/#(\d+)$/) || [])[1] || 0);
+            if (!studentId) { toast("学生解析失败", "err"); return; }
+            const result = await apiPost("/api/employee/add_score", {
+                token: user.token,
+                student_id: studentId,
+                course_name: r.course_name,
+                score: Number(r.score),
+                semester: r.semester
+            });
+            toast(result.msg || "", result.code === 200 ? "ok" : "err");
+            if (result.code === 200) loadScores();
+        }
+
+        function resetScoreFilters() {
+            const keyword = document.getElementById("scoreStudentQuery");
+            const country = document.getElementById("scoreCountry");
+            const course = document.getElementById("scoreCourse");
+            if (keyword) keyword.value = "";
+            if (country) country.value = "";
+            if (course) course.value = "";
+            loadScores();
+        }
+
+        // ---- 活动报名名单 ----
+        async function viewSignups(eventId, eventName) {
+            document.getElementById("signupTitle").innerText = "报名名单：" + eventName;
+            switchPage("event-signups");
+            try {
+                const d = await apiGet("/api/content/events/registrations?event_id=" + eventId);
+                renderTable("signupBody", [
+                    { key: "id" },
+                    { key: "who", render: r => r.customer_id
+                        ? ('<strong>学生#' + esc(r.customer_id) + '</strong><br><span class="muted">' + esc(r.participant_name || "") + '</span>')
+                        : esc(r.participant_name || "访客") },
+                    { key: "contact_info", render: r => esc(r.contact_info || "—") },
+                    { key: "target_country", render: r => esc(r.target_country || "—") },
+                    { key: "status", render: r => statusBadge(r.status) },
+                    { key: "lead", render: r => {
+                        if (!r.lead_id) return '<span class="muted">学生档案</span>';
+                        const leadId = Number(r.lead_id) || 0;
+                        const label = "线索 #" + leadId +
+                            (r.lead_owner_name ? " · " + r.lead_owner_name : "");
+                        if (!hasPerm("crm.manage")) {
+                            return '<span class="muted">' + esc(label) + '</span>';
+                        }
+                        return '<button class="btn-xs btn-success" onclick="followLead(' +
+                            leadId + ',' + esc(JSON.stringify(r.lead_customer_name || r.participant_name || "活动客户")) +
+                            ',' + esc(JSON.stringify(r.lead_status || "新增意向")) + ')">' +
+                            esc(label) + '</button>';
+                    } },
+                    { key: "create_time" }
+                ], d.data, "暂无报名");
+            } catch (e) { toast("加载名单失败", "err"); }
+        }
+
+        // ---- 线索跟进 ----
+        async function followLead(leadId, name, currentStatus) {
+            const r = await formBox("跟进线索：" + name, [
+                { key: "status", label: "销售阶段", type: "select", value: currentStatus, options: ["新增意向", "跟进中", "已签约", "已流失"] },
+                { key: "note", label: "本次跟进记录", type: "textarea", placeholder: "例如：电话沟通，意向强烈，下周安排面谈" }
+            ], { okText: "保存跟进" });
+            if (!r) return;
+            try {
+                const d = await apiPost("/api/lead/follow-up", { token: user.token, lead_id: leadId, status: r.status, note: r.note });
+                toast(d.msg || "", d.code === 200 ? "ok" : "err");
+                if (d.code === 200) loadLeads();
+            } catch (e) { toast("保存失败", "err"); }
+        }
+
+        // ---- 申请进度管理 ----
+        async function openAppForm() {
+            if (!hasPerm("application.manage")) { toast("只有顾问、管理员或领导可创建申请", "err"); return; }
+            // 拉取学生名单供选择
+            const d = await apiGet("/api/auth/users?role=STUDENT");
+            const students = d.data || [];
+            if (!students.length) { toast("暂无学生，无法创建申请", "err"); return; }
+            const r = await formBox("新建留学申请", [
+                { key: "student", label: "学生", type: "select", options: students.map(s => (s.real_name || s.username) + " (#" + s.id + ")") },
+                { key: "country", label: "申请国家", placeholder: "例如：德国" },
+                { key: "university", label: "目标院校", placeholder: "例如：慕尼黑大学" },
+                { key: "program", label: "目标专业", placeholder: "例如：机械工程" }
+            ], { okText: "创建申请" });
+            if (!r) return;
+            const sid = Number((r.student.match(/#(\d+)/) || [])[1] || 0);
+            if (!sid) { toast("学生解析失败", "err"); return; }
+            try {
+                const d2 = await apiPost("/api/application/create", {
+                    token: user.token, student_id: sid, country: r.country, university: r.university, program: r.program
+                });
+                toast(d2.msg || "", d2.code === 200 ? "ok" : "err");
+                if (d2.code === 200) loadAllApps();
+            } catch (e) { toast("创建失败", "err"); }
+        }
+        async function loadAllApps() {
+            try {
+                const d = await apiGet("/api/application/all");
+                const rows = d.data || [];
+                if (window.YJCharts) {
+                    const stageOrder = ["选校定位", "材料准备", "递交申请", "面试/补充", "收到Offer", "办理签证", "行前准备", "已入学"];
+                    YJCharts.funnel("applicationStageChart", countBy(rows, "stage", {}, stageOrder), {
+                        colors: ["#2563eb", "#4f74ed", "#6366f1", "#7c5cf5", "#8b5cf6", "#06b6d4", "#14b8a6", "#22a86b"],
+                        emptyText: "暂无申请档案",
+                        onClick: function (row) {
+                            const filtered = rows.filter(function (item) { return item.stage === row.key; });
+                            openAdminPreview("申请阶段 · " + row.label, "共 " + filtered.length + " 份申请",
+                                applicationPreviewRecords(filtered), "application", "该阶段暂无申请");
+                        }
+                    });
+                }
+                renderTable("appBody", [
+                    { key: "id" },
+                    { key: "student_name", render: r => esc(r.student_name || ("学生#" + r.student_id)) },
+                    { key: "target", render: r => esc(r.university || r.country || "—") },
+                    { key: "program", render: r => esc(r.program || "—") },
+                    { key: "stage", render: r => '<button class="link-btn" onclick="openApplicationStage(' +
+                        r.id + ',' + esc(JSON.stringify(r.stage)) + ')"><b style="color:#2563eb;">' +
+                        esc(r.stage) + '</b></button>' },
+                    { key: "progress", render: r => '<div style="min-width:80px;"><div style="font-size:12px;">' + r.progress_pct + '%</div><div class="progress-bar" style="margin:3px 0 0;"><i style="width:' + r.progress_pct + '%"></i></div></div>' },
+                    { key: "status", render: r => statusBadge(r.status) },
+                    { key: "op", render: r => {
+                        let actions = '<button class="btn-xs btn-sm-outline" onclick="openApplicationArchive(' +
+                            r.id + ',' + esc(JSON.stringify({ stage: r.stage })) + ')">查看档案</button>';
+                        if (hasPerm("application.manage") && ["待受理","进行中"].indexOf(r.status) >= 0) {
+                            actions += '<button class="btn-xs" onclick="openApplicationStage(' + r.id + ',' +
+                                esc(JSON.stringify(r.stage)) + ')">完善阶段</button>';
+                            actions += '<button class="btn-xs btn-success" onclick="advanceApp(' + r.id + ',' +
+                                esc(JSON.stringify(r.stage)) + ')">推进</button>';
+                        }
+                        return '<div class="row-actions">' + actions + '</div>';
+                    } }
+                ], rows, "暂无申请记录");
+            } catch (e) { toast("加载失败", "err"); }
+        }
+
+        document.addEventListener("yj-application-changed", function () {
+            if (user && allowedPages.has("application")) loadAllApps();
+        });
+
+        async function advanceApp(appId, currentStage) {
+            const stages = ["选校定位", "材料准备", "递交申请", "面试/补充", "收到Offer", "办理签证", "行前准备", "已入学"];
+            const currentIndex = stages.indexOf(currentStage);
+            if (currentIndex < 0 || currentIndex >= stages.length - 1) {
+                toast("该申请没有可继续推进的下一阶段", "err");
+                return;
+            }
+            const nextStage = stages[currentIndex + 1];
+            const r = await formBox("推进申请阶段", [
+                { key: "stage", label: "下一阶段", value: nextStage, placeholder: nextStage },
+                { key: "note", label: "阶段说明（选填）", type: "textarea", placeholder: "例如：已确定3所目标院校" }
+            ], {
+                okText: "确认推进",
+                message: "申请必须按顺序推进，本次只能从「" + currentStage + "」进入「" + nextStage + "」。",
+            });
+            if (!r) return;
+            try {
+                const d = await apiPost("/api/application/advance", {
+                    token: user.token, application_id: appId, stage: nextStage, note: r.note
+                });
+                toast(d.msg || "", d.code === 200 ? "ok" : "err");
+                if (d.code === 200) loadAllApps();
+            } catch (e) { toast("推进失败", "err"); }
+        }
+
+        window.onPageShow = function (id) {
+            if (id === "reports") loadReports();
+            else if (id === "pending") loadPending();
+            else if (id === "leaves") loadAllLeaves();
+            else if (id === "feedback") { loadFeedbackCountryOptions(); loadFeedbacks(); }
+            else if (id === "events") loadEvents();
+            else if (id === "programs") loadPrograms();
+            else if (id === "students") { loadStudentsByCountry(); loadGraduationPending(); }
+            else if (id === "training") loadTrainingPlans();
+            else if (id === "alerts") loadAlerts();
+            else if (id === "leads") loadLeads();
+            else if (id === "application") loadAllApps();
+            else if (id === "scores") { loadScoreCountryOptions(); loadScores(); }
+            else if (id === "users") loadStaff();
+            else if (id === "profile") renderUserCenter("userCenterBox", user);
+            else if (id === "overview") loadOverview();
+        };
+
+        // ---- 员工账号管理 ----
+        function toggleStaffForm() {
+            const f = document.getElementById("staffForm");
+            f.style.display = f.style.display === "none" ? "block" : "none";
+        }
+
+        async function loadStaff() {
+            const panel = document.getElementById("staffPanel");
+            if (user.user_type !== "ADMIN") { panel.style.display = "none"; return; }
+            panel.style.display = "block";
+            try {
+                const d = await apiGet("/api/auth/staff");
+                const rows = (d.code === 200 && d.data) ? d.data : [];
+                if (!rows.length) {
+                    document.getElementById("staffBody").innerHTML = '<tr><td colspan="7" class="center muted">暂无员工账号</td></tr>';
+                    return;
+                }
+                document.getElementById("staffBody").innerHTML = rows.map(function (s) {
+                    const disabled = s.status !== "正常";
+                    const isSelf = s.id === user.user_id;
+                    const btn = isSelf
+                        ? '<span class="muted">当前账号</span>'
+                        : '<div class="row-actions"><button class="btn-sm-outline" onclick="editStaff(' + s.id + ')">编辑角色</button><button class="btn-sm-outline" onclick="setStaffStatus(' + s.id + ',\'' + (disabled ? "enable" : "disable") + '\')">' + (disabled ? "启用" : "停用") + '</button>' +
+                          '<button class="btn-sm-outline" onclick="resetStaffPassword(' + s.id + ')">重置密码</button></div>';
+                    const roleNames = { EMPLOYEE: "员工", ADMIN: "管理员", MAINTAINER: "维护人员" };
+                    const subNames = { ADVISOR: "顾问", HOMEROOM: "班主任", LEADER: "领导" };
+                    const roleText = roleNames[s.user_type] || s.user_type;
+                    return '<tr><td>' + esc(s.username) + '</td><td>' + esc(s.real_name || "—") + '</td><td>' +
+                        esc(roleText + (s.staff_role ? " / " + (subNames[s.staff_role] || s.staff_role) : "")) +
+                        '</td><td>' + esc(s.department || "—") + '</td><td>' + esc(s.contact_info || "—") +
+                        '</td><td>' + statusBadge(s.status) + '</td><td>' + btn + '</td></tr>';
+                }).join("");
+            } catch (e) {
+                document.getElementById("staffBody").innerHTML = '<tr><td colspan="5" class="center muted">加载失败</td></tr>';
+            }
+        }
+
+        async function createStaff() {
+            const msg = document.getElementById("staffMsg");
+            const username = document.getElementById("stUser").value.trim();
+            const real_name = document.getElementById("stName").value.trim();
+            const contact_info = document.getElementById("stContact").value.trim();
+            const password = document.getElementById("stPass").value;
+            const account_role = document.getElementById("stAccountRole").value;
+            const staff_role = document.getElementById("stBusinessRole").value;
+            const department = document.getElementById("stDepartment").value.trim();
+            const security_question = document.getElementById("stQuestion").value;
+            const security_answer = document.getElementById("stAnswer").value.trim();
+            if (!username || !password) { msg.className = "form-msg msg-err"; msg.innerText = "请填写账号和密码"; return; }
+            if (password.length < 8) { msg.className = "form-msg msg-err"; msg.innerText = "初始密码至少 8 位"; return; }
+            if (!security_answer) { msg.className = "form-msg msg-err"; msg.innerText = "请填写安全问题答案"; return; }
+            msg.className = "form-msg"; msg.innerText = "正在创建...";
+            try {
+                const d = await apiPost("/api/auth/staff", {
+                    token: user.token, action: "create", username, real_name, contact_info,
+                    password, account_role, staff_role, department,
+                    security_question, security_answer
+                });
+                if (d.code !== 200) { msg.className = "form-msg msg-err"; msg.innerText = d.msg || "创建失败"; return; }
+                msg.className = "form-msg msg-ok"; msg.innerText = "已创建，请把账号密码线下告知同事";
+                document.getElementById("stUser").value = "";
+                document.getElementById("stName").value = "";
+                document.getElementById("stContact").value = "";
+                document.getElementById("stPass").value = "";
+                document.getElementById("stAnswer").value = "";
+                loadStaff();
+            } catch (e) { msg.className = "form-msg msg-err"; msg.innerText = "无法连接后端服务"; }
+        }
+
+        function toggleStaffRole() {
+            const employee = document.getElementById("stAccountRole").value === "EMPLOYEE";
+            document.getElementById("stBusinessRoleWrap").style.display = employee ? "block" : "none";
+        }
+
+        async function forgotPassword() {
+            const username = await promptBox("找回密码", "请输入后台账号", { required: true });
+            if (!username) return;
+            const q = await apiPost("/api/auth/recovery-question", { username });
+            if (q.code !== 200) { toast(q.msg || "无法找回", "err"); return; }
+            const answer = await promptBox("安全问题", q.data.security_question, { required: true });
+            if (answer === null) return;
+            const password = await promptBox("设置新密码", "员工密码至少 8 位", { required: true, inputType: "password" });
+            if (!password) return;
+            const d = await apiPost("/api/auth/forgot-password", { username, security_answer: answer, new_password: password });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+        }
+
+        async function setStaffStatus(uid, action) {
+            const label = action === "disable" ? "停用" : "启用";
+            const yes = await confirmBox("确认" + label + "该账号？",
+                action === "disable" ? "停用后该员工将立即无法登录后台，历史数据不受影响。" : "启用后该员工可以重新登录后台。");
+            if (!yes) return;
+            try {
+                const d = await apiPost("/api/auth/staff", { token: user.token, action: action, user_id: uid });
+                toast(d.msg || label, d.code === 200 ? "ok" : "err");
+                if (d.code === 200) loadStaff();
+            } catch (e) { toast("操作失败", "err"); }
+        }
+
+        async function resetStaffPassword(uid) {
+            const password = await promptBox("重置员工密码", "请输入至少 8 位的新密码，重置后旧登录状态会立即失效。", {
+                placeholder: "新密码", inputType: "password", required: true
+            });
+            if (password === null) return;
+            if (password.length < 8) { toast("新密码至少 8 位", "err"); return; }
+            const d = await apiPost("/api/auth/staff", {
+                token: user.token, action: "reset_password", user_id: uid, password
+            });
+            toast(d.msg || "", d.code === 200 ? "ok" : "err");
+        }
+
+        async function editStaff(uid) {
+            const d = await apiGet("/api/auth/staff");
+            const row = (d.data || []).find(function (x) { return x.id === uid; });
+            if (!row) { toast("账号不存在", "err"); return; }
+            const values = await formBox("编辑用户与角色", [
+                { key: "real_name", label: "姓名", value: row.real_name || "" },
+                { key: "contact_info", label: "联系方式", value: row.contact_info || "" },
+                { key: "account_role", label: "账号角色", type: "select", value: row.user_type || "EMPLOYEE",
+                  options: [{value:"EMPLOYEE",label:"业务员工"},{value:"ADMIN",label:"管理员"},{value:"MAINTAINER",label:"维护人员"}] },
+                { key: "staff_role", label: "员工子角色", type: "select", value: row.staff_role || "ADVISOR",
+                  options: [{value:"ADVISOR",label:"顾问"},{value:"HOMEROOM",label:"班主任"},{value:"LEADER",label:"领导"}] },
+                { key: "department", label: "部门", value: row.department || "" }
+            ], { okText: "保存角色" });
+            if (!values) return;
+            const result = await apiPost("/api/auth/staff", {
+                token: user.token, action: "update", user_id: uid,
+                real_name: values.real_name, contact_info: values.contact_info,
+                account_role: values.account_role, staff_role: values.staff_role,
+                department: values.department
+            });
+            toast(result.msg || "", result.code === 200 ? "ok" : "err");
+            if (result.code === 200) loadStaff();
+        }
+
+        bindEnter("empQuestion", sendEmployee);
+        const existing = Session.get();
+        const remembered = localStorage.getItem("yj_backoffice_username");
+        if (remembered) { document.getElementById("loginUser").value = remembered; document.getElementById("rememberUser").checked = true; }
+        if (existing && ["EMPLOYEE","TEACHER","ADMIN","MAINTAINER"].indexOf(existing.user_type) >= 0) enterWorkspace(existing);
+        else { if (existing) Session.clear(); checkSetup(); }
+    </script>
+</body>
+</html>

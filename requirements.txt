@@ -1,0 +1,11 @@
+# ai智能助手 - 后端依赖
+# 安装：pip install -r requirements.txt
+# 已在 Python 3.13.14 验证通过
+
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+pydantic>=2.5,<3.0
+PyYAML>=6.0,<7.0
+
+# 说明：其余均为 Python 标准库（sqlite3 / hashlib / hmac / urllib / json / socket）。
+# 当前实测版本：fastapi 0.163.1 · uvicorn 0.54.0 · pydantic 2.14.3

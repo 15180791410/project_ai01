@@ -1,0 +1,1596 @@
+# 自动生成：不要手改，改 build_tools.py 后重新生成
+openapi: 3.0.3
+info:
+  title: yuejiao_api
+  version: 2.0.0
+  description: ai智能助手后端接口集合（v2，覆盖学生/员工/客服/内容/线索/申请/通知共 54 个工具）。导入 Dify「工具 → 自定义工具 → 从 OpenAPI/Swagger 导入」后即可在工作流工具节点中调用；创建工具时名称请填写
+    yuejiao_api。token 参数由工作流的 auth_token 变量传入。
+servers:
+- url: http://host.docker.internal:8000
+  description: 本地后端（Dify 容器通过 host.docker.internal 访问）
+paths:
+  /api/actions/prepare:
+    post:
+      operationId: prepare_business_action
+      summary: 通用业务动作准备：补字段、消歧和确认
+      description: 通用业务准备工具：补字段、列候选、消歧、生成确认预览，不写正式业务表。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                visitor_key:
+                  type: string
+                  description: 公开访客标识；登录用户可留空
+                query:
+                  type: string
+                  description: 用户本轮原话。用于后端日期解析辅助，不能由模型改写
+                history:
+                  type: string
+                  description: 最近几轮用户消息，仅用于补全已经出现过的学生或名称，不得覆盖本轮明确信息
+                action_type:
+                  type: string
+                  description: 业务动作类型：event_register / score_query / score_upsert / score_delete / feedback_create / feedback_cancel
+                    / lead_create
+                user_action:
+                  type: string
+                  description: 用户本轮动作：collect / confirm / modify / cancel
+                  example: collect
+                slots_json:
+                  type: string
+                  description: Dify LLM 提取的业务字段 JSON 字符串，不得补写用户没有提供的信息
+                  example: '{}'
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/actions/execute:
+    post:
+      operationId: execute_business_action
+      summary: 通用业务动作执行：消费确认令牌后写库
+      description: 通用业务执行工具：只接受 prepare_business_action 返回的一次性确认令牌，执行前再次校验权限和数据范围。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - confirmation_token
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                visitor_key:
+                  type: string
+                  description: 公开访客标识；登录用户可留空
+                confirmation_token:
+                  type: string
+                  description: prepare_leave 返回的一次性确认令牌；只能传回 confirm_leave
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/leave/prepare:
+    post:
+      operationId: prepare_leave
+      summary: Dify 请假编排：准备并归一化草稿
+      description: 请假准备工具。接收 Dify 已抽取字段，归一化日期、保存草稿、检查缺失和重叠；绝不创建正式请假单。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                query:
+                  type: string
+                  description: 用户本轮原话。用于后端日期解析辅助，不能由模型改写
+                action:
+                  type: string
+                  description: 用户本轮动作：collect 提供信息 / confirm 确认提交 / modify 修改 / cancel 取消
+                  example: collect
+                leave_type:
+                  type: string
+                  description: Dify LLM 提取的请假类型，例如 病假 / 事假；未提供时为空字符串
+                start_date:
+                  type: string
+                  description: Dify LLM 提取或识别的开始日期；不明确时原样放入 date_text
+                end_date:
+                  type: string
+                  description: Dify LLM 提取或识别的结束日期；不明确时由后端日期解析辅助归一化
+                date_text:
+                  type: string
+                  description: 用户原文中的日期表达，例如「下周一到下周三」，交给后端确定性解析
+                reason:
+                  type: string
+                  description: 请假原因原文，例如「明天要去医院复查，请假两天」
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/leave/confirm:
+    post:
+      operationId: confirm_leave
+      summary: Dify 请假编排：确认后正式提交
+      description: 请假最终提交工具。只接受 prepare_leave 返回的 confirmation_token；再次执行 Pydantic、权限、日期重叠和事务写入校验。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - confirmation_token
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                confirmation_token:
+                  type: string
+                  description: prepare_leave 返回的一次性确认令牌；只能传回 confirm_leave
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/leave:
+    post:
+      operationId: leave
+      summary: 提交请假申请
+      description: 提交请假申请
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - reason
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                reason:
+                  type: string
+                  description: 请假原因原文，例如「明天要去医院复查，请假两天」
+                start_time:
+                  type: string
+                  description: 活动开始时间，例如 2026-12-20
+                end_time:
+                  type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/emotion:
+    post:
+      operationId: emotion
+      summary: 提交情绪倾诉
+      description: 提交情绪倾诉
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - text
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                text:
+                  type: string
+                  description: 学生的情绪倾诉原文
+                emotion_tag:
+                  type: string
+                emotion_score:
+                  type: string
+                risk_level:
+                  type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/feedback:
+    post:
+      operationId: feedback
+      summary: 提交售后反馈
+      description: 提交售后反馈
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - content
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                content:
+                  type: string
+                  description: 反馈或投诉的正文内容
+                detail:
+                  type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/my_scores:
+    get:
+      operationId: my_scores
+      summary: 查询我的成绩
+      description: 查询我的成绩
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/my_leaves:
+    get:
+      operationId: my_leaves
+      summary: 查询我的请假记录
+      description: 查询我的请假记录
+      parameters:
+      - name: status
+        in: query
+        required: false
+        description: status
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/my_feedbacks:
+    get:
+      operationId: my_feedbacks
+      summary: 查询我的售后工单
+      description: 查询我的售后工单
+      parameters:
+      - name: status
+        in: query
+        required: false
+        description: status
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/psych-profile:
+    get:
+      operationId: my_psych_profile
+      summary: 查询我的心理画像
+      description: 查询我的心理画像
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/student/stage:
+    get:
+      operationId: my_stage
+      summary: 我的学籍阶段与已解锁服务
+      description: 我的学籍阶段与已解锁服务
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/search:
+    get:
+      operationId: search_customer
+      summary: 统一搜索学生档案与意向客户
+      description: 统一搜索学生档案与意向客户
+      parameters:
+      - name: name
+        in: query
+        required: true
+        description: name
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/add_lead:
+    post:
+      operationId: add_lead
+      summary: 录入意向客户
+      description: 录入意向客户
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - customer_name
+              - contact_info
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                customer_name:
+                  type: string
+                  description: 客户姓名
+                contact_info:
+                  type: string
+                  description: 联系方式（手机号或邮箱）
+                owner_employee_id:
+                  type: integer
+                  description: 归属员工ID（整数）
+                  example: 0
+                background_info:
+                  type: string
+                  description: 背景简述，例如「本科在读，想去G5，均分85」
+                follow_up_history:
+                  type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/report:
+    post:
+      operationId: submit_report
+      summary: 提交员工日报
+      description: 提交员工日报
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - content
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                content:
+                  type: string
+                  description: 反馈或投诉的正文内容
+                report_date:
+                  type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/add_score:
+    post:
+      operationId: add_score
+      summary: 录入学生成绩
+      description: 录入学生成绩
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - student_id
+              - course_name
+              - score
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                student_id:
+                  type: integer
+                  description: 学生ID（整数）
+                course_name:
+                  type: string
+                  description: 课程名称
+                score:
+                  type: number
+                  description: 分数（数字）
+                semester:
+                  type: string
+                  description: 学期，例如 2026春季
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/update_lead_status:
+    put:
+      operationId: update_lead_status
+      summary: 更新客户状态
+      description: 更新客户状态
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - lead_id
+              - new_status
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                lead_id:
+                  type: integer
+                  description: 客户线索ID（整数）
+                new_status:
+                  type: string
+                  description: 新的客户状态：新增意向 / 跟进中 / 已签约 / 已流失
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/search_advanced:
+    get:
+      operationId: search_advanced
+      summary: 高级搜索客户
+      description: 高级搜索客户
+      parameters:
+      - name: status
+        in: query
+        required: false
+        description: status
+        schema:
+          type: string
+      - name: owner_id
+        in: query
+        required: false
+        description: owner_id
+        schema:
+          type: string
+      - name: keyword
+        in: query
+        required: false
+        description: keyword
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/resolve_feedback:
+    put:
+      operationId: resolve_feedback
+      summary: 解决售后工单并通知
+      description: 解决售后工单并通知
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - ticket_id
+              - solution
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                ticket_id:
+                  type: integer
+                  description: 售后工单ID（整数）
+                solution:
+                  type: string
+                  description: 处理方案说明
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/reports:
+    get:
+      operationId: get_reports
+      summary: 查询员工日报
+      description: 查询员工日报
+      parameters:
+      - name: employee_id
+        in: query
+        required: false
+        description: employee_id
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/search_scores:
+    get:
+      operationId: search_scores
+      summary: 查询学生成绩
+      description: 查询学生成绩
+      parameters:
+      - name: student_id
+        in: query
+        required: false
+        description: student_id
+        schema:
+          type: string
+      - name: course_name
+        in: query
+        required: false
+        description: course_name
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/employee/nl2sql:
+    post:
+      operationId: nl2sql
+      summary: 处理NL2SQL自然语言指令
+      description: 处理NL2SQL自然语言指令
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - command
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                command:
+                  type: string
+                  description: 自然语言统计指令，例如「统计一下各国家的学生人数」
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/customer/events:
+    get:
+      operationId: list_events
+      summary: 查询所有活动讲座
+      description: 查询所有活动讲座
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/customer/courses:
+    get:
+      operationId: list_courses
+      summary: 查询课程项目
+      description: 查询课程项目
+      parameters:
+      - name: keyword
+        in: query
+        required: false
+        description: keyword
+        schema:
+          type: string
+      - name: category
+        in: query
+        required: false
+        description: category
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/customer/registrations:
+    get:
+      operationId: get_registrations
+      summary: 查询报名记录
+      description: 查询报名记录
+      parameters:
+      - name: customer_id
+        in: query
+        required: false
+        description: customer_id
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/auth/profile:
+    get:
+      operationId: profile
+      summary: 用户中心：个人资料 + 数据概览
+      description: 查询当前登录用户的个人资料与数据概览（待审批数、学生数等），需要 token。
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/auth/change-password:
+    post:
+      operationId: change_password
+      summary: 用户中心：修改密码
+      description: 用户中心：修改密码
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - old_password
+              - new_password
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                old_password:
+                  type: string
+                  description: 当前密码
+                new_password:
+                  type: string
+                  description: 新密码，至少 6 位
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/auth/users:
+    get:
+      operationId: list_users
+      summary: 按角色查询用户（仅员工）
+      description: '按角色查询用户，并按当前员工的数据范围过滤。
+
+
+        顾问和班主任选学生时只应看到自己负责的学生；管理员与领导才可查看全量。
+
+        其他员工的账号资料不在普通业务员工的可见范围内。'
+      parameters:
+      - name: role
+        in: query
+        required: false
+        description: role
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/teacher/pending-leaves:
+    get:
+      operationId: pending_leaves
+      summary: 待审批请假列表
+      description: 查询待审批的学生请假列表，需要员工 token。
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/teacher/all-leaves:
+    get:
+      operationId: all_leaves
+      summary: 全部请假记录
+      description: 全部请假记录
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/teacher/approve:
+    post:
+      operationId: approve_leave_with_comment
+      summary: 审批请假（通过可留言，驳回必填理由）
+      description: 审批学生请假。approved=true 时可用 comment 给学生留言；approved=false 时 comment 必填作为驳回理由。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - leave_id
+              - approved
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                leave_id:
+                  type: integer
+                  description: 请假单ID（整数）。可先调用 pending_leaves 查看待审批列表再取ID
+                approved:
+                  type: boolean
+                  description: 是否通过：true 表示同意，false 表示驳回
+                comment:
+                  type: string
+                  description: 审批意见。同意时是给学生的留言（选填）；驳回时是驳回理由（必填）
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/events:
+    get:
+      operationId: content_events
+      summary: 活动列表（公开可读）
+      description: '按登录身份过滤活动。
+
+
+        匿名访客只能看 PUBLIC/ALL；学生可看 PUBLIC/STUDENT/ALL；
+
+        员工可看所有范围；维护人员仍只返回公开活动。'
+      parameters:
+      - name: event_type
+        in: query
+        required: false
+        description: event_type
+        schema:
+          type: string
+      - name: audience
+        in: query
+        required: false
+        description: audience
+        schema:
+          type: string
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/events/save:
+    post:
+      operationId: save_event
+      summary: 新增/编辑活动（仅管理员）
+      description: 新增/编辑活动（仅管理员）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                event_name:
+                  type: string
+                  description: 活动名称
+                event_type:
+                  type: string
+                start_time:
+                  type: string
+                  description: 活动开始时间，例如 2026-12-20
+                end_time:
+                  type: string
+                location:
+                  type: string
+                  description: 活动地点
+                country:
+                  type: string
+                  description: 国家名称，只能填写知识库已确认的项目国家，例如 德国 / 新加坡
+                description:
+                  type: string
+                  description: 详细描述文本
+                audience_scope:
+                  type: string
+                  example: PUBLIC
+                max_participants:
+                  type: integer
+                  description: 最多参与人数（整数）
+                  example: 0
+                event_id:
+                  type: integer
+                  description: 活动ID（整数）。可先调用 content_events 或 list_events 查询活动再取ID
+                  example: 0
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/events/delete:
+    post:
+      operationId: delete_event
+      summary: 删除活动（仅管理员）
+      description: 删除活动（仅管理员）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                event_name:
+                  type: string
+                  description: 活动名称
+                event_type:
+                  type: string
+                start_time:
+                  type: string
+                  description: 活动开始时间，例如 2026-12-20
+                end_time:
+                  type: string
+                location:
+                  type: string
+                  description: 活动地点
+                country:
+                  type: string
+                  description: 国家名称，只能填写知识库已确认的项目国家，例如 德国 / 新加坡
+                description:
+                  type: string
+                  description: 详细描述文本
+                audience_scope:
+                  type: string
+                  example: PUBLIC
+                max_participants:
+                  type: integer
+                  description: 最多参与人数（整数）
+                  example: 0
+                event_id:
+                  type: integer
+                  description: 活动ID（整数）。可先调用 content_events 或 list_events 查询活动再取ID
+                  example: 0
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/events/register:
+    post:
+      operationId: register_event
+      summary: 报名活动（学生登录 或 访客填联系方式）
+      description: 学生或访客报名活动。已登录学生只需 event_id + token；访客需填 customer_name 与 contact_info。名额满或重复报名会返回失败。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - event_id
+              properties:
+                event_id:
+                  type: integer
+                  description: 活动ID（整数）。可先调用 content_events 或 list_events 查询活动再取ID
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                customer_name:
+                  type: string
+                  description: 客户姓名
+                contact_info:
+                  type: string
+                  description: 联系方式（手机号或邮箱）
+                target_country:
+                  type: string
+                  description: 意向国家，例如 德国 / 新加坡；不得自行扩展知识库未上线国家
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/events/registrations:
+    get:
+      operationId: event_registrations
+      summary: 活动报名名单（仅员工）
+      description: 查询某场活动的报名名单，需要员工 token；event_id 可选，不传则返回全部。
+      parameters:
+      - name: event_id
+        in: query
+        required: false
+        description: event_id
+        schema:
+          type: integer
+          example: 0
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/my-registrations:
+    get:
+      operationId: my_registrations
+      summary: 我报名的活动（学生）
+      description: 查询当前登录学生已报名的活动列表，需要 token。
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/programs:
+    get:
+      operationId: list_programs
+      summary: 从 Dify 知识库实时读取留学方案
+      description: 从 Dify 知识库实时读取留学方案
+      parameters:
+      - name: category
+        in: query
+        required: false
+        description: category
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/students-by-country:
+    get:
+      operationId: students_by_country
+      summary: 按意向国家分组的学生（仅员工）
+      description: 按意向国家分组统计学生人数，需要员工 token。
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/student/country:
+    post:
+      operationId: set_student_country
+      summary: 学生设置意向国家
+      description: 学生设置意向国家
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                country:
+                  type: string
+                  description: 国家名称，只能填写知识库已确认的项目国家，例如 德国 / 新加坡
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/content/alert/handle:
+    post:
+      operationId: handle_alert
+      summary: 处理心理预警（仅员工）
+      description: 把一个心理预警标记为已解决并填写处理备注，需要员工 token。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                alert_id:
+                  type: integer
+                  description: 心理预警ID（整数）
+                  example: 0
+                note:
+                  type: string
+                  description: 本次操作备注，会记入历史时间轴
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/lead/submit:
+    post:
+      operationId: submit_lead
+      summary: 官网咨询留资（免登录，公开）
+      description: 官网咨询留资：写入客户线索并自动分配给员工，免登录。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_name:
+                  type: string
+                  description: 客户姓名
+                contact_info:
+                  type: string
+                  description: 联系方式（手机号或邮箱）
+                target_country:
+                  type: string
+                  description: 意向国家，例如 德国 / 新加坡；不得自行扩展知识库未上线国家
+                background_info:
+                  type: string
+                  description: 背景简述，例如「本科在读，想去G5，均分85」
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/lead/list:
+    get:
+      operationId: list_leads
+      summary: 全部线索（员工）
+      description: 全部线索（员工）
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/lead/follow-up:
+    post:
+      operationId: follow_up_lead
+      summary: 员工跟进线索（更新阶段 + 追加记录）
+      description: 员工跟进线索：更新阶段并追加跟进记录，需要员工 token。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - lead_id
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                lead_id:
+                  type: integer
+                  description: 客户线索ID（整数）
+                status:
+                  type: string
+                  description: 线索阶段：新增意向 / 跟进中 / 已签约 / 已流失
+                note:
+                  type: string
+                  description: 本次操作备注，会记入历史时间轴
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/application/my:
+    get:
+      operationId: my_applications
+      summary: 学生查看自己的申请进度（含时间轴）
+      description: 查询当前登录学生的留学申请进度与时间轴，需要 token。回答「我的申请到哪一步了」这类问题时调用。
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/application/all:
+    get:
+      operationId: all_applications
+      summary: 员工查看全部申请进度
+      description: 员工查看全部申请进度
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/application/create:
+    post:
+      operationId: create_application
+      summary: 员工为学生创建申请
+      description: 员工为学生创建申请
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - student_id
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                student_id:
+                  type: integer
+                  description: 学生ID（整数）
+                country:
+                  type: string
+                  description: 国家名称，只能填写知识库已确认的项目国家，例如 德国 / 新加坡
+                university:
+                  type: string
+                  description: 目标院校名称
+                program:
+                  type: string
+                  description: 申请专业方向
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/application/advance:
+    post:
+      operationId: advance_application
+      summary: 员工推进申请阶段（自动留痕 + 通知学生）
+      description: 员工推进申请阶段（自动留痕 + 通知学生）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              - application_id
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                application_id:
+                  type: integer
+                  description: 申请ID（整数）。可先调用 my_applications / all_applications 取ID
+                stage:
+                  type: string
+                  description: 要推进到的阶段；留空表示自动进入下一阶段
+                note:
+                  type: string
+                  description: 本次操作备注，会记入历史时间轴
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/notification/list:
+    get:
+      operationId: list_notifications
+      summary: 我的通知列表（含未读数）
+      description: 查询当前登录用户的站内通知列表与未读数，需要 token。
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        description: limit
+        schema:
+          type: integer
+          example: 50
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/notification/read:
+    post:
+      operationId: mark_notification_read
+      summary: 标记通知已读（单条或全部）
+      description: 标记通知已读（单条或全部）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - token
+              properties:
+                token:
+                  type: string
+                  description: 登录令牌。由「开始」节点的 auth_token 变量传入，形如 {{#start_node.auth_token#}}
+                notify_id:
+                  type: integer
+                  description: 通知ID（整数），传 0 表示把全部通知标记为已读
+                  example: 0
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/notification/unread:
+    get:
+      operationId: unread_notifications
+      summary: 未读通知数（铃铛角标用）
+      description: 未读通知数（铃铛角标用）
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/admin/alerts:
+    get:
+      operationId: list_alerts
+      summary: 查询心理预警列表（含学生姓名）
+      description: 查询心理预警列表（含学生姓名、触发原因、风险等级、处理状态）。
+      parameters:
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/admin/handle_alert:
+    put:
+      operationId: handle_alert_admin
+      summary: 处理心理预警
+      description: 处理心理预警
+      parameters:
+      - name: alert_id
+        in: query
+        required: true
+        description: alert_id
+        schema:
+          type: integer
+      - name: token
+        in: query
+        required: false
+        description: token
+        schema:
+          type: string
+      - name: authorization
+        in: header
+        required: false
+        description: authorization
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败
+  /api/recommend/recommend:
+    post:
+      operationId: recommend_project
+      summary: 画像项目推荐（共享确定性工具）
+      description: 根据年龄、学历、意向、语言和动手能力进行确定性项目推荐，返回逐项目匹配分与理由。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                raw_text:
+                  type: string
+                age:
+                  type: string
+                education:
+                  type: string
+                intent:
+                  type: string
+                language:
+                  type: string
+                hands_on:
+                  type: string
+                economic_condition:
+                  type: string
+      responses:
+        '200':
+          description: 处理结果
+        '422':
+          description: 参数校验失败

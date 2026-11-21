@@ -1,0 +1,9 @@
+{
+  "_说明": "可提交模板。真实密钥请放在 dify_config.local.json 或环境变量中。",
+  "api_base": "",
+  "keys": {
+    "STUDENT": "",
+    "EMPLOYEE": "",
+    "CUSTOMER": ""
+  }
+}

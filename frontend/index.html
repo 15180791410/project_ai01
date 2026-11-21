@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ai · 国际教育服务</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="static/site.css">
+    <link rel="stylesheet" href="static/premium.css">
+    <link rel="stylesheet" href="static/widget.css">
+</head>
+
+<body>
+
+    <!-- 顶部导航 -->
+    <nav class="site-nav">
+        <div class="site-nav-inner">
+            <a href="index.html" class="site-logo" style="text-decoration:none;">
+                <span class="mark"></span>
+                <span id="kbBrandName">ai<small>国际教育服务</small></span>
+            </a>
+            <div class="site-links">
+                <a href="#about">关于我们</a>
+                <a href="#services">服务体系</a>
+                <a href="#programs">留学方案</a>
+                <a href="#events">最新活动</a>
+                <a href="#contact">联系我们</a>
+                <div class="login-entry" id="loginEntry">
+                    <button type="button" class="login-toggle" onclick="toggleLoginMenu(event)">登录 / 注册</button>
+                    <div class="login-menu" id="loginMenu">
+                        <a href="student.html"><b>学生登录 / 注册</b><span>办理请假、成绩、申请和售后</span></a>
+                        <a href="admin.html"><b>员工登录</b><span>顾问、班主任、领导和管理员</span></a>
+                    </div>
+                </div>
+                <a href="service.html" class="nav-cta">免费咨询 →</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero-wrap">
+        <div class="hero">
+            <div class="hero-grid">
+                <div>
+                    <div class="hero-badge">🎓 留学规划 · 升学服务 · 全程陪伴</div>
+                    <h1>找到适合你的<br><span class="hl">留学与升学路径</span></h1>
+                    <p class="lead" id="kbHeroLead">为你梳理方向、匹配路径，让每一步升学选择更清晰。</p>
+                    <div class="hero-btns">
+                        <a href="service.html" class="b1">免费领取留学方案</a>
+                        <a href="#services" class="b2">了解我们的服务</a>
+                    </div>
+
+                </div>
+                <div class="hero-art">
+                    <div class="top"><span class="dot" style="background:#ef4444"></span><span class="dot"
+                            style="background:#f59e0b"></span><span class="dot" style="background:#22c55e"></span></div>
+                    <div class="chat">你好，我想咨询适合我的留学方案。</div>
+                    <div class="chat ai">
+                        <div class="who">🤖 ai智能顾问</div>
+                        请告诉我年龄、当前学历和升学或就业目标，我会直接给出具体方案。
+                        <div class="typing"><i></i><i></i><i></i></div>
+                    </div>
+                    <div class="chat" style="opacity:.7">好的，帮我预约一下！</div>
+                </div>
+            </div>
+            <div class="journey-ribbon">
+                <div class="journey-step"><b>01 · 背景评估</b><span>年龄、学历、语言与目标</span></div>
+                <div class="journey-step"><b>02 · 方案匹配</b><span>结合公司政策与业务资料给出具体方向</span></div>
+                <div class="journey-step"><b>03 · 申请办理</b><span>国家、模式、院校与材料</span></div>
+                <div class="journey-step"><b>04 · 入学服务</b><span>进度、活动、请假与关怀</span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 数据 -->
+    <div class="stats-band">
+        <div class="stats-inner">
+            <div>
+                <div class="n" id="kbFoundedStat">—</div>
+                <div class="l">企业创办年份</div>
+            </div>
+            <div>
+                <div class="n" id="kbBusinessStat">—</div>
+                <div class="l">核心业务方向</div>
+            </div>
+            <div>
+                <div class="n" id="kbCountryStat">—</div>
+                <div class="l">可咨询项目国家</div>
+            </div>
+            <div>
+                <div class="n" id="kbProgramStat">—</div>
+                <div class="l">留学与升学方案</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关于我们 -->
+    <section class="section" id="about">
+        <div class="sec-head">
+            <span class="sec-tag">ABOUT US</span>
+            <h2 id="kbAboutHeading">关于我们</h2>
+            <p>从教育服务出发，为学生与家庭提供清晰、可靠的升学支持</p>
+        </div>
+        <div class="about-grid">
+            <div class="about-visual">
+                <div class="big">🎓</div>
+                <h3 id="kbAboutVisualTitle">服务方向</h3>
+                <p id="kbAboutVisualText">国际教育与升学规划服务</p>
+                <div class="about-badge-row" id="kbAboutBadges"></div>
+            </div>
+            <div class="about-text">
+                <h3 id="kbAboutTitle">ai</h3>
+                <p id="kbAboutText">专注教育服务与国际化人才培养。</p>
+                <p id="kbAboutDetail">为学生提供从方向规划到升学落地的持续支持。</p>
+                <ul class="checks" id="kbAboutChecks"></ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心优势 -->
+    <section class="section section-soft" id="advantage">
+        <div class="sec-head">
+            <span class="sec-tag">WHY CHOOSE US</span>
+            <h2>专业服务优势</h2>
+            <p>从咨询评估到升学规划，为每个家庭提供清晰可行的服务路径</p>
+        </div>
+        <div class="adv-grid" id="kbAdvantageCards"></div>
+    </section>
+
+    <!-- 校训文化 -->
+    <section class="motto-wrap">
+        <div class="q">"</div>
+        <h2 id="kbMissionTitle">企业使命</h2>
+        <p id="kbMissionText">以专业服务连接教育资源与成长机会。</p>
+        <div class="motto-vals" id="kbValueCards">
+            <div>正在加载企业信息...</div>
+        </div>
+    </section>
+
+    <!-- 服务领域 -->
+    <section class="section section-soft" id="stories">
+        <div class="sec-head">
+            <span class="sec-tag">SERVICE SCOPE</span>
+            <h2>服务领域</h2>
+            <p>围绕国际教育、升学规划与人才培养持续拓展服务能力</p>
+        </div>
+        <div class="adv-grid" id="kbBusinessCards"></div>
+    </section>
+
+    <!-- 服务体系 -->
+    <section class="section" id="services">
+        <div class="sec-head">
+            <span class="sec-tag">OUR SERVICES</span>
+            <h2>三类教育服务能力</h2>
+            <p>为学生、家长与内部团队提供清晰、高效、可持续的服务支持</p>
+        </div>
+        <div class="portal-grid3">
+            <div class="pcard student">
+                <span class="p-tag t-login">学生专属服务</span>
+                <div class="p-ic ic-blue">🎓</div>
+                <h4>学生工作台</h4>
+                <p>面向在读学子，一站式办理校园事务、查询学业信息与获得智能关怀。</p>
+                <ul>
+                    <li>在线请假与审批进度追踪</li>
+                    <li>成绩查询与学业智能咨询</li>
+                    <li>情绪记录与心理健康关怀</li>
+                    <li>售后反馈与留学政策问答</li>
+                </ul>
+                <span class="p-note">如需办理，请使用右上角“学生登录”</span>
+            </div>
+            <div class="pcard service">
+                <span class="p-tag t-free">免登录体验</span>
+                <div class="p-ic ic-amber">💬</div>
+                <h4>客服与活动咨询</h4>
+                <p>面向家长与访客，无需注册即可咨询课程项目、活动讲座与常见问题。</p>
+                <ul>
+                    <li>课程与留学项目介绍</li>
+                    <li>活动讲座查询与报名</li>
+                    <li>常见问题与政策咨询</li>
+                    <li>常见问题与业务咨询在线解答</li>
+                </ul>
+                <a href="service.html" class="p-btn">立即免费咨询 →</a>
+            </div>
+            <div class="pcard admin">
+                <span class="p-tag t-admin">内部业务能力</span>
+                <div class="p-ic ic-purple">🛠️</div>
+                <h4>员工管理后台</h4>
+                <p>公司内部工作台，集成请假审批、内容管理、学生管理与智能助手。</p>
+                <ul>
+                    <li>学生请假审批（可附留言）</li>
+                    <li>活动与留学方案管理</li>
+                    <li>心理预警与客户线索看板</li>
+                    <li>员工智能业务助手</li>
+                </ul>
+                <span class="p-note">员工请使用右上角“员工登录”</span>
+            </div>
+        </div>
+        <div class="panel" style="margin-top:22px;max-width:1040px;margin-left:auto;margin-right:auto;">
+            <div class="chart-panel-head">
+                <div>
+                    <h4>智能服务协同树</h4>
+                    <p>学生、访客与员工使用同一套业务数据底座，按角色进入不同服务链路</p>
+                </div>
+                <span class="chart-chip">SERVICE MAP</span>
+            </div>
+            <div id="homeServiceTree"></div>
+        </div>
+    </section>
+
+    <!-- 留学方案 -->
+    <section class="section section-soft" id="programs">
+        <div class="sec-head">
+            <span class="sec-tag">STUDY PROGRAMS</span>
+            <h2>热门留学方案</h2>
+            <p>覆盖主流留学国家，总有一款适合你</p>
+        </div>
+        <div class="prog-grid" id="progGrid">
+            <div class="prog-card"><span class="country">升学</span>
+                <h4>正在加载留学与升学方案</h4>
+                <p>请稍候...</p>
+            </div>
+        </div>
+        <div class="center" style="margin-top:30px;"><a href="service.html" class="btn btn-ghost">咨询更多方案 →</a></div>
+    </section>
+
+    <!-- 最新活动 -->
+    <section class="section" id="events">
+        <div class="sec-head">
+            <span class="sec-tag">EVENTS</span>
+            <h2>近期活动与讲座</h2>
+            <p>与招生官面对面，把握第一手资讯</p>
+        </div>
+        <div class="event-list" id="eventList"></div>
+    </section>
+
+    <!-- CTA：免费留学方案留资 -->
+    <section class="section cta-wrap" id="contact">
+        <div class="cta-inner">
+            <h2>准备好开启你的留学之旅？</h2>
+            <p>留下联系方式，专属顾问将为你免费评估背景 + 定制留学方案</p>
+            <div class="lead-form">
+                <input type="text" id="leadName" placeholder="你的称呼 *">
+                <input type="text" id="leadContact" placeholder="手机 / 邮箱 *">
+                <select id="leadCountry">
+                    <option value="">意向国家</option>
+                    <option value="">加载可选国家...</option>
+                </select>
+                <input type="text" id="leadBg" placeholder="背景简述（选填）如：本科在读，想去G5">
+                <button onclick="submitLeadForm()">免费获取方案 →</button>
+            </div>
+            <div id="leadMsg" class="form-msg" style="max-width:620px;margin:10px auto 0;"></div>
+            <div class="hero-btns" style="margin-top:18px;">
+                <a href="service.html" class="b2">先在线咨询</a>
+                <a href="#programs" class="b2">查看留学方案</a>
+            </div>
+            <p class="cta-contact" id="kbContact"></p>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-top">
+                <div>
+                    <div class="footer-brand"><span class="mark">粤</span> <span id="kbFooterBrand">智能教育服务</span></div>
+                    <p id="kbFooterText">提供国际教育与升学规划服务。</p>
+                </div>
+                <div class="footer-col">
+                    <h5>快速入口</h5><a href="#about">关于我们</a><a href="#services">服务体系</a><a href="#programs">留学方案</a><a
+                        href="#events">最新活动</a>
+                </div>
+                <div class="footer-col">
+                    <h5>服务平台</h5><a href="student.html">学生工作台</a><a href="service.html">客服与活动咨询</a><a
+                        href="admin.html">员工管理后台</a>
+                </div>
+                <div class="footer-col">
+                    <h5>联系我们</h5><a id="kbFooterPhone" href="#">咨询电话加载中</a><span id="kbFooterAddress">地址加载中</span><span
+                        id="kbFooterWechat">公众号加载中</span>
+                </div>
+            </div>
+            <div class="footer-bottom" id="kbFooterCopyright">ai</div>
+        </div>
+    </footer>
+
+    <script src="static/common.js"></script>
+    <script src="static/charts.js"></script>
+    <script src="static/widget.js"></script>
+    <script>
+        // 顶部右侧统一登录入口：页面只保留这一处登录/注册操作。
+        function renderTopLogin() {
+            const box = document.getElementById("loginEntry");
+            if (!box) return;
+            const current = (typeof Session !== "undefined") ? Session.get() : null;
+            if (current && current.token) {
+                const target = current.user_type === "STUDENT" ? "student.html" : "admin.html";
+                const role = current.role_label || (current.user_type === "STUDENT" ? "学生" : "员工");
+                box.innerHTML =
+                    '<div class="top-auth-user">' +
+                    '<span class="who">' + esc(current.real_name || current.username) + ' · ' + esc(role) + '</span>' +
+                    '<a href="' + target + '">进入工作台</a>' +
+                    '<span class="logout-link" onclick="logoutHome(event)">退出</span></div>';
+            }
+        }
+
+        function toggleLoginMenu(event) {
+            event.stopPropagation();
+            document.getElementById("loginEntry").classList.toggle("open");
+        }
+
+        function logoutHome(event) {
+            event.preventDefault();
+            Session.clear();
+            location.reload();
+        }
+
+        document.addEventListener("click", function (event) {
+            const box = document.getElementById("loginEntry");
+            if (box && !box.contains(event.target)) box.classList.remove("open");
+        });
+
+        // 动态加载留学方案
+        async function loadPrograms() {
+            try {
+                const d = await apiGet("/api/content/programs");
+                const rows = (d && d.data) || [];
+                if (!rows.length) return;
+                window.kbPrograms = rows;
+                document.getElementById("progGrid").innerHTML = rows.slice(0, 6).map(function (p) {
+                    return '<div class="prog-card"><span class="country">' + esc(p.country || '全球') + '</span>' +
+                        '<h4>' + esc(p.project_name) + '</h4><p>' + esc(p.description || '') + '</p>' +
+                        '<div class="aud">适合：' + esc(p.target_audience || '详见咨询') + '</div></div>';
+                }).join("");
+                const countries = Array.from(new Set(rows.map(function (p) { return p.country; }).filter(Boolean)));
+                document.getElementById("kbCountryStat").textContent = countries.length || "—";
+                document.getElementById("kbProgramStat").textContent = rows.length || "—";
+                const select = document.getElementById("leadCountry");
+                if (select) select.innerHTML = '<option value="">意向国家</option>' + countries.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join("");
+            } catch (e) { }
+        }
+
+        async function loadCompanyContent() {
+            try {
+                const d = await apiGet("/api/content/company");
+                if (d.code !== 200) return;
+                const payload = d.data || {};
+                const c = payload.structured || payload;
+                const text = function (section, key) {
+                    const item = c[section] && c[section][key];
+                    return item ? item.content : "";
+                };
+                const companyName = text("hero", "name") || "ai";
+                const shortMatch = companyName.match(/简称[“"]([^”"]+)/);
+                const brandShort = shortMatch ? shortMatch[1] : companyName;
+                document.title = brandShort + " · 国际教育服务";
+                document.getElementById("kbBrandName").firstChild.textContent = brandShort;
+                document.getElementById("kbFooterBrand").textContent = brandShort;
+                document.getElementById("kbAboutHeading").textContent = "关于" + brandShort;
+                document.getElementById("kbHeroLead").textContent = text("about", "international");
+                document.getElementById("kbFoundedStat").textContent = text("hero", "founded");
+                document.getElementById("kbBusinessStat").textContent =
+                    (text("about", "business").split("、")[0] || "—");
+                document.getElementById("kbFooterCopyright").textContent =
+                    "© 2026 " + brandShort + " · 保留所有权利";
+                document.getElementById("kbAboutTitle").textContent = text("hero", "name") + " · 国际教育服务";
+                document.getElementById("kbAboutText").textContent =
+                    text("about", "business") || text("about", "international");
+                document.getElementById("kbAboutDetail").textContent =
+                    text("hero", "transfer") || text("about", "mission");
+                document.getElementById("kbAboutVisualTitle").textContent = text("about", "business");
+                document.getElementById("kbAboutVisualText").textContent = text("about", "international");
+                document.getElementById("kbAboutBadges").innerHTML =
+                    '<span>✓ ' + esc(text("about", "mission")) + '</span>' +
+                    '<span>✓ ' + esc(text("about", "values")) + '</span>';
+                document.getElementById("kbAboutChecks").innerHTML =
+                    '<li>' + esc(text("about", "business")) + '</li>' +
+                    '<li>' + esc(text("about", "international")) + '</li>';
+                document.getElementById("kbMissionTitle").textContent = text("about", "mission");
+                document.getElementById("kbMissionText").textContent = text("about", "international");
+                document.getElementById("kbContact").textContent =
+                    text("contact", "phone") + "　|　" + text("contact", "address") + "　|　公众号：" + text("contact", "wechat");
+                document.getElementById("kbFooterPhone").textContent = "咨询电话 " + text("contact", "phone");
+                document.getElementById("kbFooterPhone").href = "tel:" + text("contact", "phone").replace(/[^0-9]/g, "");
+                document.getElementById("kbFooterAddress").textContent = text("contact", "address");
+                document.getElementById("kbFooterWechat").textContent = "公众号 " + text("contact", "wechat");
+                document.getElementById("kbValueCards").innerHTML =
+                    '<div><b>使命</b>' + esc(text("about", "mission")) + '</div>' +
+                    '<div><b>价值观</b>' + esc(text("about", "values")) + '</div>' +
+                    '<div><b>业务</b>' + esc(text("about", "business")) + '</div>';
+                document.getElementById("kbBusinessCards").innerHTML =
+                    '<div class="adv-card"><div class="ic ic-blue">🌍</div><h4>国际教育</h4><p>' +
+                    esc(text("about", "international")) + '</p></div>' +
+                    '<div class="adv-card"><div class="ic ic-purple">📚</div><h4>主营业务</h4><p>' +
+                    esc(text("about", "business")) + '</p></div>' +
+                    '<div class="adv-card"><div class="ic ic-amber">🏢</div><h4>企业沿革</h4><p>' +
+                    esc(text("hero", "founded") + " " + text("hero", "transfer")) + '</p></div>';
+                document.getElementById("kbAdvantageCards").innerHTML =
+                    '<div class="adv-card"><div class="ic ic-blue">🎓</div><h4>国际教育</h4><p>' +
+                    esc(text("about", "international")) + '</p></div>' +
+                    '<div class="adv-card"><div class="ic ic-purple">🧭</div><h4>企业使命</h4><p>' +
+                    esc(text("about", "mission")) + '</p></div>' +
+                    '<div class="adv-card"><div class="ic ic-amber">🤝</div><h4>企业价值观</h4><p>' +
+                    esc(text("about", "values")) + '</p></div>' +
+                    '<div class="adv-card"><div class="ic ic-blue">📚</div><h4>主营业务</h4><p>' +
+                    esc(text("about", "business")) + '</p></div>';
+                document.getElementById("kbFooterText").textContent =
+                    text("hero", "name") + " · " + text("hero", "founded") + " · " + text("about", "business");
+            } catch (e) { }
+        }
+
+        // 动态加载活动
+        async function loadEvents() {
+            try {
+                const d = await apiGet("/api/content/events");
+                const rows = (d && d.data) || [];
+                const box = document.getElementById("eventList");
+                if (!rows.length) { box.innerHTML = '<div class="muted center">暂无活动，敬请期待</div>'; return; }
+                box.innerHTML = rows.slice(0, 6).map(function (e) {
+                    const dt = (e.start_time || "").split("-");
+                    const day = dt.length === 3 ? dt[2] : "—";
+                    const ym = dt.length === 3 ? dt[0] + "." + dt[1] : (e.start_time || "");
+                    const maxp = e.max_participants || 0, cur = e.current_participants || 0;
+                    const full = maxp && cur >= maxp;
+                    const cap = maxp ? ('<span class="capacity">' + (full ? '名额已满' : '余 ' + (maxp - cur) + ' 席') + '</span>') : '';
+                    return '<div class="event-card"><div class="date"><b>' + esc(day) + '</b><span>' + esc(ym) + '</span></div>' +
+                        '<div><h4>' + esc(e.event_name) + '　' + cap + '</h4>' +
+                        '<div class="meta">📍 ' + esc(e.location || '线上/线下') + (e.country ? '　🌍 ' + esc(e.country) : '') + '</div>' +
+                        '<p>' + esc(e.description || '详情请咨询顾问') + '</p>' +
+                        (full ? '' : '<button class="btn-ghost" style="padding:6px 14px;font-size:13px;margin-top:8px;" onclick="openSignup(' + e.id + ',' + esc(JSON.stringify(e.event_name)) + ')">立即报名 →</button>') +
+                        '</div></div>';
+                }).join("");
+            } catch (e) { }
+        }
+
+        // 活动报名弹窗（访客免登录，填姓名+联系方式）
+        async function openSignup(eventId, eventName) {
+            const r = await formBox("报名活动", [
+                { key: "name", label: "姓名", placeholder: "请输入你的姓名", required: true },
+                { key: "contact", label: "联系方式", placeholder: "手机号或邮箱", required: true },
+                { key: "country", label: "意向国家（选填）", type: "select", options: [""].concat(Array.from(new Set((window.kbPrograms || []).map(function (p) { return p.country; }).filter(Boolean)))) }
+            ], { message: "报名：" + eventName, okText: "提交报名" });
+            if (!r) return;
+            try {
+                const d = await apiPost("/api/content/events/register", {
+                    event_id: eventId, customer_name: r.name, contact_info: r.contact, target_country: r.country
+                });
+                toast(d.msg || "", d.code === 200 ? "ok" : "err");
+                if (d.code === 200) loadEvents();
+            } catch (e) { toast("无法连接后端服务", "err"); }
+        }
+
+        // 官网留资 → 直接进入 crm_lead
+        async function submitLeadForm() {
+            const msg = document.getElementById("leadMsg");
+            const name = (document.getElementById("leadName").value || "").trim();
+            const contact = (document.getElementById("leadContact").value || "").trim();
+            const country = (document.getElementById("leadCountry").value || "").trim();
+            const bg = (document.getElementById("leadBg").value || "").trim();
+            if (!name || !contact) { msg.className = "form-msg msg-err"; msg.innerText = "请填写姓名和联系方式"; return; }
+            try {
+                const d = await apiPost("/api/lead/submit", {
+                    customer_name: name, contact_info: contact, target_country: country, background_info: bg
+                });
+                msg.className = "form-msg " + (d.code === 200 ? "msg-ok" : "msg-err");
+                msg.innerText = d.msg || "";
+                if (d.code === 200) {
+                    ["leadName", "leadContact", "leadBg"].forEach(id => document.getElementById(id).value = "");
+                    toast("提交成功，顾问会尽快联系你", "ok");
+                }
+            } catch (e) { msg.className = "form-msg msg-err"; msg.innerText = "无法连接后端服务"; }
+        }
+
+        renderTopLogin();
+        if (window.YJCharts) {
+            YJCharts.tree("homeServiceTree", {
+                icon: "粤", label: "ai智能服务矩阵", hint: "统一身份 · 统一数据 · 分角色服务",
+                children: [
+                    { label: "学生服务", children: [{ label: "学业与成绩" }, { label: "请假服务" }, { label: "心理关怀" }, { label: "申请进度" }] },
+                    { label: "访客与客户", children: [{ label: "政策咨询" }, { label: "方案匹配" }, { label: "活动报名" }, { label: "顾问跟进" }] },
+                    { label: "员工协同", children: [{ label: "CRM 线索" }, { label: "教学管理" }, { label: "预警看板" }, { label: "运营内容" }] }
+                ]
+            });
+        }
+        loadPrograms();
+        loadCompanyContent();
+        loadEvents();
+    </script>
+</body>
+
+</html>

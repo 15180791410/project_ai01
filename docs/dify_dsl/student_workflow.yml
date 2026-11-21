@@ -1,0 +1,3556 @@
+# 自动生成：patch_workflows.py + patch_leave_orchestration.py + patch_business_actions.py
+app:
+  description: ai-留学生智能管家（最终智能版）。自动识别请假、查成绩、情绪倾诉、售后反馈、日常闲聊；登录后按学生身份调用接口。
+  icon: 👨‍🎓
+  icon_background: '#EFF1FE'
+  icon_type: emoji
+  mode: advanced-chat
+  name: 留学生管家（最终版）
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.1.5
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods: []
+    opening_statement: 你好呀！我是你的留学生管家。你可以直接告诉我你的问题，比如请假、查成绩、心情不好想倾诉，我都会帮你处理哦！
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 我明天要请假三天
+    - 查一下我的成绩
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+  graph:
+    edges:
+    - id: e_if_node_emotion_record
+      source: if_node
+      sourceHandle: emotion_record
+      target: tool_emotion
+    - id: e_tool_emotion_llm_emotion
+      source: tool_emotion
+      sourceHandle: source
+      target: llm_emotion
+    - id: e_llm_emotion_answer_emotion
+      source: llm_emotion
+      sourceHandle: source
+      target: answer_emotion
+    - id: e_if_node_stage_info
+      source: if_node
+      sourceHandle: stage_info
+      target: tool_my_stage
+    - id: e_tool_my_stage_llm_my_stage
+      source: tool_my_stage
+      sourceHandle: source
+      target: llm_my_stage
+    - id: e_llm_my_stage_answer_my_stage
+      source: llm_my_stage
+      sourceHandle: source
+      target: answer_my_stage
+    - id: e_if_node_leave_records
+      source: if_node
+      sourceHandle: leave_records
+      target: tool_my_leaves
+    - id: e_tool_my_leaves_llm_my_leaves
+      source: tool_my_leaves
+      sourceHandle: source
+      target: llm_my_leaves
+    - id: e_llm_my_leaves_answer_my_leaves
+      source: llm_my_leaves
+      sourceHandle: source
+      target: answer_my_leaves
+    - id: e_if_node_scores
+      source: if_node
+      sourceHandle: scores
+      target: tool_score
+    - id: e_tool_score_llm_score
+      source: tool_score
+      sourceHandle: source
+      target: llm_score
+    - id: e_llm_score_answer_score
+      source: llm_score
+      sourceHandle: source
+      target: answer_score
+    - id: e_if_node_psych_profile
+      source: if_node
+      sourceHandle: psych_profile
+      target: tool_psych_profile
+    - id: e_tool_psych_profile_llm_psych_profile
+      source: tool_psych_profile
+      sourceHandle: source
+      target: llm_psych_profile
+    - id: e_llm_psych_profile_answer_psych_profile
+      source: llm_psych_profile
+      sourceHandle: source
+      target: answer_psych_profile
+    - id: e_if_node_feedback_records
+      source: if_node
+      sourceHandle: feedback_records
+      target: tool_my_feedbacks
+    - id: e_tool_my_feedbacks_llm_my_feedbacks
+      source: tool_my_feedbacks
+      sourceHandle: source
+      target: llm_my_feedbacks
+    - id: e_llm_my_feedbacks_answer_my_feedbacks
+      source: llm_my_feedbacks
+      sourceHandle: source
+      target: answer_my_feedbacks
+    - id: e_if_node_application_progress
+      source: if_node
+      sourceHandle: application_progress
+      target: tool_progress
+    - id: e_tool_progress_llm_progress
+      source: tool_progress
+      sourceHandle: source
+      target: llm_progress
+    - id: e_llm_progress_answer_progress
+      source: llm_progress
+      sourceHandle: source
+      target: answer_progress
+    - id: e_if_node_registration_records
+      source: if_node
+      sourceHandle: registration_records
+      target: tool_my_regs
+    - id: e_tool_my_regs_llm_my_regs
+      source: tool_my_regs
+      sourceHandle: source
+      target: llm_my_regs
+    - id: e_llm_my_regs_answer_my_regs
+      source: llm_my_regs
+      sourceHandle: source
+      target: answer_my_regs
+    - id: e_if_node_events
+      source: if_node
+      sourceHandle: events
+      target: tool_events
+    - id: e_tool_events_llm_events
+      source: tool_events
+      sourceHandle: source
+      target: llm_events
+    - id: e_llm_events_answer_events
+      source: llm_events
+      sourceHandle: source
+      target: answer_events
+    - id: e_if_node_notifications
+      source: if_node
+      sourceHandle: notifications
+      target: tool_notify
+    - id: e_tool_notify_llm_notify
+      source: tool_notify
+      sourceHandle: source
+      target: llm_notify
+    - id: e_llm_notify_answer_notify
+      source: llm_notify
+      sourceHandle: source
+      target: answer_notify
+    - id: e_if_node_recommend
+      source: if_node
+      sourceHandle: recommend
+      target: llm_profile_extract
+    - id: e_llm_profile_extract_code_profile_extract
+      source: llm_profile_extract
+      sourceHandle: source
+      target: code_profile_extract
+    - id: e_code_profile_extract_tool_recommend
+      source: code_profile_extract
+      sourceHandle: source
+      target: tool_recommend
+    - id: e_tool_recommend_llm_recommend
+      source: tool_recommend
+      sourceHandle: source
+      target: llm_recommend
+    - id: e_llm_recommend_answer_recommend
+      source: llm_recommend
+      sourceHandle: source
+      target: answer_recommend
+    - id: e_if_node_knowledge_help
+      source: if_node
+      sourceHandle: knowledge_help
+      target: '2858411665611'
+    - id: e_2858411665611_llm_kb
+      source: '2858411665611'
+      sourceHandle: source
+      target: llm_kb
+    - id: e_llm_kb_answer_kb
+      source: llm_kb
+      sourceHandle: source
+      target: answer_kb
+    - id: e_tool_feedback_llm_feedback
+      source: tool_feedback
+      sourceHandle: source
+      target: llm_feedback
+    - id: e_llm_feedback_answer_feedback
+      source: llm_feedback
+      sourceHandle: source
+      target: answer_feedback
+    - id: e_if_node_false
+      source: if_node
+      sourceHandle: fallback_general
+      target: llm_chat
+    - id: e_llm_chat_answer_chat
+      source: llm_chat
+      sourceHandle: source
+      target: answer_chat
+    - id: e_start_leave_context
+      source: start_node
+      sourceHandle: source
+      target: code_leave_context
+      targetHandle: target
+    - id: e_leave_context_if
+      source: code_leave_context
+      sourceHandle: source
+      target: if_node
+      targetHandle: target
+    - id: e_if_leave_apply_extract
+      source: if_node
+      sourceHandle: leave_apply
+      target: llm_leave_extract
+      targetHandle: target
+    - id: e_if_leave_continue_extract
+      source: if_node
+      sourceHandle: leave_continue
+      target: llm_leave_extract
+      targetHandle: target
+    - id: e_extract_code
+      source: llm_leave_extract
+      sourceHandle: source
+      target: code_leave_extract
+      targetHandle: target
+    - id: e_code_prepare
+      source: code_leave_extract
+      sourceHandle: source
+      target: tool_leave_prepare
+      targetHandle: target
+    - id: e_prepare_code
+      source: tool_leave_prepare
+      sourceHandle: source
+      target: code_leave_prepare
+      targetHandle: target
+    - id: e_prepare_if
+      source: code_leave_prepare
+      sourceHandle: source
+      target: if_leave_state
+      targetHandle: target
+    - id: e_leave_missing
+      source: if_leave_state
+      sourceHandle: case_missing
+      target: llm_leave_ask
+      targetHandle: target
+    - id: e_leave_confirm
+      source: if_leave_state
+      sourceHandle: case_confirm
+      target: llm_leave_confirm
+      targetHandle: target
+    - id: e_leave_ready
+      source: if_leave_state
+      sourceHandle: case_ready
+      target: tool_leave_confirm
+      targetHandle: target
+    - id: e_leave_terminal
+      source: if_leave_state
+      sourceHandle: case_terminal
+      target: llm_leave_terminal
+      targetHandle: target
+    - id: e_leave_false_terminal
+      source: if_leave_state
+      sourceHandle: 'false'
+      target: llm_leave_terminal
+      targetHandle: target
+    - id: e_leave_submit_result
+      source: tool_leave_confirm
+      sourceHandle: source
+      target: llm_leave_result
+      targetHandle: target
+    - id: e_leave_ask_answer
+      source: llm_leave_ask
+      sourceHandle: source
+      target: answer_leave_ask
+      targetHandle: target
+    - id: e_leave_confirm_answer
+      source: llm_leave_confirm
+      sourceHandle: source
+      target: answer_leave_confirm
+      targetHandle: target
+    - id: e_leave_result_answer
+      source: llm_leave_result
+      sourceHandle: source
+      target: answer_leave_result
+      targetHandle: target
+    - id: e_leave_terminal_answer
+      source: llm_leave_terminal
+      sourceHandle: source
+      target: answer_leave_terminal
+      targetHandle: target
+    - id: e_if_node_business_action
+      source: if_node
+      sourceHandle: business_action
+      target: llm_action_extract
+      targetHandle: target
+    - id: e_if_node_business_continue
+      source: if_node
+      sourceHandle: business_continue
+      target: llm_action_extract
+      targetHandle: target
+    - id: e_action_extract_code
+      source: llm_action_extract
+      sourceHandle: source
+      target: code_action_extract
+      targetHandle: target
+    - id: e_action_code_prepare
+      source: code_action_extract
+      sourceHandle: source
+      target: tool_action_prepare
+      targetHandle: target
+    - id: e_action_prepare_code
+      source: tool_action_prepare
+      sourceHandle: source
+      target: code_action_prepare
+      targetHandle: target
+    - id: e_action_prepare_if
+      source: code_action_prepare
+      sourceHandle: source
+      target: if_action_state
+      targetHandle: target
+    - id: e_action_missing_ask
+      source: if_action_state
+      sourceHandle: case_action_missing
+      target: llm_action_ask
+      targetHandle: target
+    - id: e_action_confirm
+      source: if_action_state
+      sourceHandle: case_action_confirm
+      target: llm_action_confirm
+      targetHandle: target
+    - id: e_action_ready
+      source: if_action_state
+      sourceHandle: case_action_ready
+      target: tool_action_execute
+      targetHandle: target
+    - id: e_action_false_terminal
+      source: if_action_state
+      sourceHandle: 'false'
+      target: llm_action_terminal
+      targetHandle: target
+    - id: e_action_execute_result
+      source: tool_action_execute
+      sourceHandle: source
+      target: llm_action_result
+      targetHandle: target
+    - id: e_action_ask_answer
+      source: llm_action_ask
+      sourceHandle: source
+      target: answer_action_ask
+      targetHandle: target
+    - id: e_action_confirm_answer
+      source: llm_action_confirm
+      sourceHandle: source
+      target: answer_action_confirm
+      targetHandle: target
+    - id: e_action_result_answer
+      source: llm_action_result
+      sourceHandle: source
+      target: answer_action_result
+      targetHandle: target
+    - id: e_action_terminal_answer
+      source: llm_action_terminal
+      sourceHandle: source
+      target: answer_action_terminal
+      targetHandle: target
+    - id: e_if_node_feedback_create
+      source: if_node
+      sourceHandle: feedback_create
+      target: llm_action_extract
+      targetHandle: target
+    nodes:
+    - id: start_node
+      data:
+        desc: student_id/employee_id 为整数，由 Service API 的 inputs 传入；auth_token 为登录令牌，新接口（申请进度/报名/通知/审批/线索等）用它鉴权。
+        type: start
+        title: 开始
+        selected: false
+        variables:
+        - type: number
+          label: 学生ID（登录用户ID）
+          default: 1
+          options: []
+          required: false
+          variable: student_id
+        - type: text-input
+          label: 登录令牌（由后端自动传入）
+          default: ''
+          options: []
+          required: false
+          variable: auth_token
+        - type: text-input
+          label: 是否存在请假草稿（1/0）
+          default: '0'
+          options: []
+          required: false
+          variable: leave_pending
+        - type: text-input
+          label: 是否存在业务动作草稿（1/0）
+          default: '0'
+          options: []
+          required: false
+          variable: action_pending
+        - type: text-input
+          label: 待处理业务动作类型
+          default: '0'
+          options: []
+          required: false
+          variable: pending_action_type
+        - type: text-input
+          label: 最近几轮用户消息（仅用于补全上下文）
+          default: ''
+          options: []
+          required: false
+          variable: recent_history
+      type: custom
+      width: 242
+      height: 227
+      position:
+        x: 50
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 50
+        y: 320
+    - id: if_node
+      data:
+        desc: 使用 LLM 语义判断用户意图，再进入对应业务链路
+        type: question-classifier
+        title: 意图分类
+        selected: false
+        query_variable_selector:
+        - code_leave_context
+        - context_query
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        classes:
+        - id: emotion_record
+          name: 压力；难受；焦虑；抑郁；崩溃；自杀
+        - id: stage_info
+          name: 我的学籍；学籍阶段；我现在什么阶段；已解锁
+        - id: leave_records
+          name: 请假记录；我的请假；请假情况；请过假
+        - id: scores
+          name: 成绩；分数；绩点
+        - id: psych_profile
+          name: 心理画像；情绪历史；情绪记录
+        - id: feedback_records
+          name: 反馈记录；售后记录；投诉记录
+        - id: application_progress
+          name: 查询申请进度；申请到哪一步；当前申请状态；offer状态
+        - id: registration_records
+          name: 我的报名；报名记录；报过名；报名了
+        - id: events
+          name: 活动；讲座；宣讲；展会；见面会；联展
+        - id: notifications
+          name: 通知；消息；提醒；未读
+        - id: recommend
+          name: 推荐方案；适合我；升学路径；就业方向；移民规划
+        - id: knowledge_help
+          name: 请假流程；能否请假；能请假；可以请假；条件；政策
+        - id: leave_continue
+          name: 请假草稿续办：补充字段、确认、修改或取消（仅当前上下文明确存在请假草稿时）
+        - id: leave_apply
+          name: 请假；请个假；病假；事假
+        - id: feedback_create
+          name: 反馈；投诉；售后；报修
+        - id: business_continue
+          name: 业务动作续办：补充字段、从候选选择、确认、修改或取消（仅当前存在业务动作草稿时）
+        - id: business_action
+          name: 活动报名、售后提交/解决/撤回、成绩新增修改删除、客户线索录入/跟进、员工日报、就读申请新增修改撤销/推进等需要执行或消歧的业务动作
+        - id: fallback_general
+          name: 普通闲聊、无法归类的其他问题或一般知识问答
+        instruction: 请根据上下文和用户问题选择最匹配的业务类别。上下文明确存在请假草稿时，只有用户的补充、确认、修改或取消进入“请假草稿续办”；如果用户明确重新说“我要请假/我想请假/帮我请假/我需要请假”，必须进入“请假”重新发起，旧草稿字段不得沿用；没有请假草稿时，明确要请假选择“请假”；询问流程、条件、政策选择知识咨询。查询记录优先于新增，高风险情绪永远优先。不得机械按关键词判断。
+          当前上下文明确存在业务动作草稿时，补充、选择、确认、修改或取消优先进入“业务动作续办”。 明确要求报名、申请就读、修改或撤销申请、提交售后/日报、录入或跟进客户、新增修改删除成绩时，进入“业务动作”。
+        vision:
+          enabled: false
+      type: custom
+      width: 242
+      height: 896
+      position:
+        x: 350
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 350
+        y: 320
+    - id: tool_emotion
+      data:
+        desc: 工具节点：调用已导入的自定义工具 emotion（yuejiao_api）
+        type: tool
+        title: 调用情绪评估接口
+        selected: false
+        tool_name: emotion
+        tool_label: 提交情绪倾诉
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_parameters:
+          text:
+            type: mixed
+            value: '{{#sys.query#}}'
+          token:
+            type: mixed
+            value: '{{#start_node.auth_token#}}'
+        tool_node_version: '2'
+        tool_configurations: {}
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 40
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 40
+    - id: llm_emotion
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.5
+            enable_thinking: false
+        title: 生成情绪安抚回复
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - id: 550797e0-3122-468d-99f4-a3270b3ee6d0
+          role: system
+          text: '你是一个充满关怀的留学生管家。系统评估了用户情绪，接口返回：{{#tool_emotion.text#}}。若为高危，请表达深深关切并明确告知已经通知班主任；若为轻度压力，请温柔安慰。语气一定要温暖，不要说教。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文自然分段，像同事面对面说话。禁止使用任何 markdown 符号：#、##、*、**、_、`、>、|、---。
+
+            3. 需要罗列时用「1. 2. 3.」或「· 」，需要强调时用「」，不要加粗。
+
+            4. 回答尽量控制在 6 行以内；用户明确要求详细时才展开，展开也分短段。
+
+            5. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+        - id: 4ad7e0c3-7d4f-4882-b4b3-08d8783dd97f
+          role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 40
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 40
+    - id: answer_emotion
+      data:
+        desc: ''
+        type: answer
+        title: 回复安抚
+        answer: '{{#llm_emotion.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 40
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 40
+    - id: tool_my_stage
+      data:
+        type: tool
+        title: 查询我的学籍阶段
+        desc: 工具节点：调用 my_stage（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: my_stage
+        tool_label: 我的学籍阶段
+        tool_configurations: {}
+        tool_parameters:
+          authorization:
+            type: mixed
+            value: Bearer {{#start_node.auth_token#}}
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 250
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 250
+    - id: llm_my_stage
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 整理学籍阶段
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '接口返回当前学籍阶段和功能解锁情况：{{#tool_my_stage.text#}}。请说明当前阶段、可用的服务、尚不可用的服务和下一步该做什么。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+          id: fd0c9e3e-16c1-450e-ae1a-3df2167a63fc
+        - role: user
+          text: '{{#sys.query#}}'
+          id: 17349c93-8644-4f1e-b0cd-d2e76b45d73c
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 250
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 250
+    - id: answer_my_stage
+      data:
+        desc: ''
+        type: answer
+        title: 回复学籍阶段
+        answer: '{{#llm_my_stage.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 250
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 250
+    - id: tool_my_leaves
+      data:
+        type: tool
+        title: 查询我的请假
+        desc: 工具节点：调用 my_leaves（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: my_leaves
+        tool_label: 查询我的请假记录
+        tool_configurations: {}
+        tool_parameters:
+          authorization:
+            type: mixed
+            value: Bearer {{#start_node.auth_token#}}
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 460
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 460
+    - id: llm_my_leaves
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 整理请假记录
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '你是温暖的留学生管家。接口返回了该学生的请假记录：{{#tool_my_leaves.text#}}。请用简洁列表说明每次请假的起止时间、理由、状态（待审批/已通过/已驳回）；若已审批且员工留了意见，请一并转达。若没有记录，就说目前没有请假记录，需要请假可以直接告诉我。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+          id: c5e44576-e0ea-41ba-a66f-197bd17b10e7
+        - role: user
+          text: '{{#sys.query#}}'
+          id: 9d35cb2b-20bc-4bb4-bb06-b0a9db3cf182
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 460
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 460
+    - id: answer_my_leaves
+      data:
+        desc: ''
+        type: answer
+        title: 回复请假记录
+        answer: '{{#llm_my_leaves.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 460
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 460
+    - id: tool_score
+      data:
+        desc: 工具节点：调用已导入的自定义工具 my_scores（yuejiao_api）
+        type: tool
+        title: 调用查成绩接口
+        selected: false
+        tool_name: my_scores
+        tool_label: 查询我的成绩
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_parameters:
+          authorization:
+            type: mixed
+            value: Bearer {{#start_node.auth_token#}}
+        tool_node_version: '2'
+        tool_configurations: {}
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 670
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 670
+    - id: llm_score
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 生成成绩回复
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - id: 2b93d30f-9f71-4abe-9623-ebd978f55283
+          role: system
+          text: '你是一个温暖的留学生管家。系统查询了成绩，接口返回：{{#tool_score.text#}}。请把成绩整理成清晰的列表，用开心的语气发给学生；若没有记录请如实说明。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文自然分段，像同事面对面说话。禁止使用任何 markdown 符号：#、##、*、**、_、`、>、|、---。
+
+            3. 需要罗列时用「1. 2. 3.」或「· 」，需要强调时用「」，不要加粗。
+
+            4. 回答尽量控制在 6 行以内；用户明确要求详细时才展开，展开也分短段。
+
+            5. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+        - id: bbc46910-d81b-46b4-8566-1e715687718e
+          role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 670
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 670
+    - id: answer_score
+      data:
+        desc: ''
+        type: answer
+        title: 回复成绩
+        answer: '{{#llm_score.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 670
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 670
+    - id: tool_psych_profile
+      data:
+        type: tool
+        title: 查询我的心理画像
+        desc: 工具节点：调用 my_psych_profile（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: my_psych_profile
+        tool_label: 我的心理画像
+        tool_configurations: {}
+        tool_parameters:
+          authorization:
+            type: mixed
+            value: Bearer {{#start_node.auth_token#}}
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 880
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 880
+    - id: llm_psych_profile
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 整理心理画像
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '接口返回该学生最近的情绪画像：{{#tool_psych_profile.text#}}。请概述最近情绪、趋势和最近记录时间，语气温和，不做医学诊断；如出现高危记录，建议联系老师或专业支持人员。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+          id: 8d7a4ef3-0021-4e82-b63f-d9a1216a0e58
+        - role: user
+          text: '{{#sys.query#}}'
+          id: bdf24bd3-68b4-4d1f-9c1b-2074bd4670cb
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 880
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 880
+    - id: answer_psych_profile
+      data:
+        desc: ''
+        type: answer
+        title: 回复心理画像
+        answer: '{{#llm_psych_profile.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 880
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 880
+    - id: tool_my_feedbacks
+      data:
+        type: tool
+        title: 查询我的售后工单
+        desc: 工具节点：调用 my_feedbacks（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: my_feedbacks
+        tool_label: 查询我的售后记录
+        tool_configurations: {}
+        tool_parameters:
+          authorization:
+            type: mixed
+            value: Bearer {{#start_node.auth_token#}}
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 1090
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 1090
+    - id: llm_my_feedbacks
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 整理售后记录
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '接口返回该学生的售后工单：{{#tool_my_feedbacks.text#}}。请说明工单内容、状态、处理方案和提交时间；没有记录就明确说明。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+          id: b5b1fe3a-5e34-4f35-b787-5db0ae071b10
+        - role: user
+          text: '{{#sys.query#}}'
+          id: 985569ec-560e-4d8b-b14e-8a131aaf7cdf
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 1090
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 1090
+    - id: answer_my_feedbacks
+      data:
+        desc: ''
+        type: answer
+        title: 回复售后记录
+        answer: '{{#llm_my_feedbacks.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 1090
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 1090
+    - id: tool_progress
+      data:
+        type: tool
+        title: 查询申请进度
+        desc: 工具节点：调用 my_applications（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: my_applications
+        tool_label: 学生查看自己的申请进度
+        tool_configurations: {}
+        tool_parameters:
+          authorization:
+            type: mixed
+            value: Bearer {{#start_node.auth_token#}}
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 1300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 1300
+    - id: llm_progress
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 整理申请进度
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '你是留学申请顾问。接口返回该学生的申请进度与时间轴：{{#tool_progress.text#}}。请说明目标国家/院校/专业、当前阶段、总体进度百分比，并按时间顺序列出已完成的节点；若还没有申请记录，就说明暂未建档，建议先联系顾问老师建立申请档案。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+          id: e503b5e2-500f-416d-a988-4d9dbb6654e0
+        - role: user
+          text: '{{#sys.query#}}'
+          id: 41607ad4-3621-4cf9-a03b-e62cabff9edf
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 1300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 1300
+    - id: answer_progress
+      data:
+        desc: ''
+        type: answer
+        title: 回复申请进度
+        answer: '{{#llm_progress.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 1300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 1300
+    - id: tool_my_regs
+      data:
+        type: tool
+        title: 查询我的报名
+        desc: 工具节点：调用 my_registrations（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: my_registrations
+        tool_label: 我报名的活动
+        tool_configurations: {}
+        tool_parameters:
+          authorization:
+            type: mixed
+            value: Bearer {{#start_node.auth_token#}}
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 1510
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 1510
+    - id: llm_my_regs
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 整理报名记录
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '接口返回该学生已报名的活动：{{#tool_my_regs.text#}}。请列出活动名称、时间、地点、报名时间；没有记录就说明还没报名过活动，可以到「活动报名」页看看近期讲座。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+          id: 0548b6e2-a8ff-46dd-a26e-486a58aadecb
+        - role: user
+          text: '{{#sys.query#}}'
+          id: 916965ef-0597-4cbe-bfcd-c6b629196458
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 1510
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 1510
+    - id: answer_my_regs
+      data:
+        desc: ''
+        type: answer
+        title: 回复报名记录
+        answer: '{{#llm_my_regs.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 1510
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 1510
+    - id: tool_events
+      data:
+        type: tool
+        title: 查询近期活动
+        desc: 工具节点：调用 content_events（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: content_events
+        tool_label: 活动列表
+        tool_configurations: {}
+        tool_parameters: {}
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 1720
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 1720
+    - id: llm_events
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 整理活动信息
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '接口返回了近期活动列表：{{#tool_events.text#}}。有数据时最多挑最近的 3-5 场，说明名称、时间、地点、面向国家，并提醒可到「活动报名」页报名；返回空列表时明确说当前没有已发布活动，不得编造活动、时间或地点。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+          id: 115bcf32-2c1b-46b3-a2ad-de522633e785
+        - role: user
+          text: '{{#sys.query#}}'
+          id: 10fd53af-fc33-43d3-bfab-62f8296e1a0b
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 1720
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 1720
+    - id: answer_events
+      data:
+        desc: ''
+        type: answer
+        title: 回复活动
+        answer: '{{#llm_events.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 1720
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 1720
+    - id: tool_notify
+      data:
+        type: tool
+        title: 查询我的通知
+        desc: 工具节点：调用 list_notifications（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: list_notifications
+        tool_label: 我的通知列表
+        tool_configurations: {}
+        tool_parameters:
+          authorization:
+            type: mixed
+            value: Bearer {{#start_node.auth_token#}}
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 1930
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 1930
+    - id: llm_notify
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 整理通知
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '接口返回该学生的站内通知：{{#tool_notify.text#}}。请按时间倒序列出未读通知的标题与内容要点，并提示还有多少条未读；没有通知就说明当前没有新消息。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+          id: f717b00a-1152-4d88-8b49-9c8212441a56
+        - role: user
+          text: '{{#sys.query#}}'
+          id: 2e907de0-0e9d-4276-ac4a-ee383d28e351
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 1930
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 1930
+    - id: answer_notify
+      data:
+        desc: ''
+        type: answer
+        title: 回复通知
+        answer: '{{#llm_notify.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 1930
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 1930
+    - id: llm_profile_extract
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: LLM 抽取用户画像
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '只抽取用户已经明确提供的画像信息，输出严格 JSON，不要解释。字段固定为 age、education、intent、language、hands_on、economic_condition。education
+            是当前最高学历，不是目标学历；“想拿本科/想本科毕业”属于目标，不得当成当前本科。缺失字段使用空字符串；hands_on 使用 true/false。不要补充用户没有说过的信息。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。'
+          id: 2c575d5d-639f-459f-9c8a-f52603703926
+        - role: user
+          text: '{{#sys.query#}}'
+          id: 29bcbfe6-b1ed-4da6-aae5-1f54ad7ca2de
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 650
+        y: 2140
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 2140
+    - id: code_profile_extract
+      data:
+        type: code
+        title: 解析结构化画像
+        desc: 解析 LLM 输出的结构化画像，禁止猜测缺失字段
+        selected: false
+        code_language: python3
+        code: "def main(profile_json: str) -> dict:\n    import json\n    import re\n    text = (profile_json or '').strip()\n\
+          \    text = re.sub(r'^```(?:json)?\\s*', '', text, flags=re.I)\n    text = re.sub(r'\\s*```$', '', text)\n    try:\n\
+          \        data = json.loads(text)\n    except Exception:\n        data = {}\n    def value(key):\n        item =\
+          \ data.get(key)\n        if item is None:\n            return ''\n        if isinstance(item, bool):\n         \
+          \   return 'true' if item else 'false'\n        return str(item)\n    return {\n        'age': value('age'),\n \
+          \       'education': value('education'),\n        'intent': value('intent'),\n        'language': value('language'),\n\
+          \        'hands_on': value('hands_on'),\n        'economic_condition': value('economic_condition'),\n    }\n"
+        variables:
+        - variable: profile_json
+          value_selector:
+          - llm_profile_extract
+          - text
+        outputs:
+          age:
+            type: string
+            children: null
+          education:
+            type: string
+            children: null
+          intent:
+            type: string
+            children: null
+          language:
+            type: string
+            children: null
+          hands_on:
+            type: string
+            children: null
+          economic_condition:
+            type: string
+            children: null
+        dependencies: []
+      type: custom
+      width: 242
+      height: 110
+      position:
+        x: 950
+        y: 2140
+      positionAbsolute:
+        x: 950
+        y: 2140
+      selected: false
+    - id: tool_recommend
+      data:
+        type: tool
+        title: 画像匹配留学项目
+        desc: 工具节点：调用 recommend_project（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: recommend_project
+        tool_label: 项目推荐
+        tool_configurations: {}
+        tool_parameters:
+          raw_text:
+            type: mixed
+            value: '{{#sys.query#}}'
+          age:
+            type: mixed
+            value: '{{#code_profile_extract.age#}}'
+          education:
+            type: mixed
+            value: '{{#code_profile_extract.education#}}'
+          intent:
+            type: mixed
+            value: '{{#code_profile_extract.intent#}}'
+          language:
+            type: mixed
+            value: '{{#code_profile_extract.language#}}'
+          hands_on:
+            type: mixed
+            value: '{{#code_profile_extract.hands_on#}}'
+          economic_condition:
+            type: mixed
+            value: '{{#code_profile_extract.economic_condition#}}'
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 1250
+        y: 2140
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 2140
+    - id: llm_recommend
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 整理推荐结果
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - role: system
+          text: '推荐工具返回：{{#tool_recommend.text#}}。第一行必须直接写「推荐【best_match.project】，匹配度 best_match.score 分」，不要反问偏好，不要先寒暄。第二行开始最多列
+            3 条依据，总长度不超过 5 行。只能推荐 matches 中明确出现的项目；不得增加英国、澳洲、加拿大、自考本科、某某大学或其他工具未返回的项目。学制、学费、适合人群和政策只能采用 tool 返回的knowledge.snippets
+            原文；snippets 没有的事实直接说“以公司资料和顾问确认为准”。如果 best_match.caveats 有内容，必须直接说明这是一条“条件推荐”并列出前置条件。回答结尾提醒学生可到左侧「留学方案」查看全部具体方向并一键带入申请。如果
+            status=insufficient，只追问 profile 中缺失的 age/current_education；已经提供的字段绝不能再次追问。两项都已提供仍无匹配时，说明公司现有项目暂未覆盖，不得重复要求用户填写年龄或学历。其他情况直接给结论，不再追问偏好。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文，像顾问面对面说话。普通说明用自然段落，不要堆砌标题和粗体。
+
+            3. 当返回多条项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须使用 Markdown 表格，先给表头再逐行给数据，不得把多条记录挤成一段。表格列只使用工具实际返回的字段。
+
+            4. 单条确认、追问、错误说明和普通建议使用自然语言，不必强行做表格。
+
+            5. 回答尽量简洁；表格单元格中的文字要短，长说明放在表格后的自然段。
+
+            6. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+          id: cd15ea89-5a0a-4653-91ca-4faa71513010
+        - role: user
+          text: '{{#sys.query#}}'
+          id: 11b37a57-77fa-40d2-8114-44cd65ac6fde
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 1550
+        y: 2140
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1550
+        y: 2140
+    - id: answer_recommend
+      data:
+        desc: ''
+        type: answer
+        title: 回复项目推荐
+        answer: '{{#llm_recommend.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1850
+        y: 2140
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1850
+        y: 2140
+    - id: '2858411665611'
+      data:
+        type: knowledge-retrieval
+        title: 知识检索
+        selected: true
+        dataset_ids:
+        - a7bf3a9f-872b-4941-a617-0afa5b8b61b4
+        retrieval_mode: multiple
+        query_variable_selector:
+        - sys
+        - query
+        multiple_retrieval_config:
+          top_k: 4
+          reranking_mode: reranking_model
+          reranking_model:
+            model: qwen3-vl-rerank
+            provider: langgenius/tongyi/tongyi
+          reranking_enable: true
+      type: custom
+      width: 242
+      height: 90
+      position:
+        x: 650
+        y: 2350
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 2350
+    - id: llm_kb
+      data:
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        title: 知识问答
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+        vision:
+          enabled: false
+        context:
+          enabled: true
+          variable_selector:
+          - '2858411665611'
+          - result
+        selected: false
+        prompt_template:
+        - id: 7c9af5e8-8066-450f-9099-d186855bbd9c
+          role: system
+          text: '你是留学生管家。请严格依据{{#context#}}知识检索返回的内容回答学生问题，不要编造。
+
+            若公司业务资料中没有相关信息，直接回复：公司目前暂未提供相关信息，请咨询老师。
+
+            回答清晰简洁，尽量分点，并标注引用的资料名称。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文自然分段，像同事面对面说话。禁止使用任何 markdown 符号：#、##、*、**、_、`、>、|、---。
+
+            3. 需要罗列时用「1. 2. 3.」或「· 」，需要强调时用「」，不要加粗。
+
+            4. 回答尽量控制在 6 行以内；用户明确要求详细时才展开，展开也分短段。
+
+            5. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 2350
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 2350
+    - id: answer_kb
+      data:
+        desc: ''
+        type: answer
+        title: 回复知识问答
+        answer: '{{#llm_kb.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 2350
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 2350
+    - id: tool_feedback
+      data:
+        desc: 工具节点：调用已导入的自定义工具 feedback（yuejiao_api）
+        type: tool
+        title: 提交售后反馈
+        selected: false
+        tool_name: feedback
+        tool_label: 提交售后反馈
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_parameters:
+          content:
+            type: mixed
+            value: '{{#sys.query#}}'
+          token:
+            type: mixed
+            value: '{{#start_node.auth_token#}}'
+        tool_node_version: '2'
+        tool_configurations: {}
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: 当前请求未取得业务数据：可能是当前角色无权访问，或服务暂时不可用。请直接告知用户“当前角色无权执行此操作或服务暂不可用”，不得猜测、补全或输出任何未返回的数据。
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 650
+        y: 2770
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 2770
+    - id: llm_feedback
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.3
+            enable_thinking: false
+        title: 生成反馈回执
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - id: 68a69d86-44d4-4e81-af40-1c61c76afefd
+          role: system
+          text: '你是一个温暖的留学生管家。售后反馈接口返回：{{#tool_feedback.text#}}。请礼貌确认已收到反馈并会尽快处理。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文自然分段，像同事面对面说话。禁止使用任何 markdown 符号：#、##、*、**、_、`、>、|、---。
+
+            3. 需要罗列时用「1. 2. 3.」或「· 」，需要强调时用「」，不要加粗。
+
+            4. 回答尽量控制在 6 行以内；用户明确要求详细时才展开，展开也分短段。
+
+            5. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+        - id: e2698f1c-5095-46f4-b325-310b6536b7be
+          role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 950
+        y: 2770
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 2770
+    - id: answer_feedback
+      data:
+        desc: ''
+        type: answer
+        title: 回复反馈
+        answer: '{{#llm_feedback.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 1250
+        y: 2770
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 2770
+    - id: llm_chat
+      data:
+        desc: ''
+        type: llm
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.7
+            enable_search: false
+            enable_thinking: false
+        title: 日常闲聊
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        selected: false
+        prompt_template:
+        - id: 10888960-8ad6-4d82-ba9d-a5160ceb74cf
+          role: system
+          text: '你是专业、亲切的“ai-留学生管家”。请用温暖、可爱的语气回答用户，围绕留学、生活、心理话题。不要讨论敏感话题。当前学生ID：{{#start_node.student_id#}}。
+
+
+            【输出规范（必须遵守）】
+
+            1. 直接回答问题，只给结论和要点，不要输出思考过程、推理步骤、计划、工具调用说明，也不要出现“正在查询”“根据工具返回”“数据库显示”“作为 AI”这类话。
+
+            2. 用简体中文自然分段，像同事面对面说话。禁止使用任何 markdown 符号：#、##、*、**、_、`、>、|、---。
+
+            3. 需要罗列时用「1. 2. 3.」或「· 」，需要强调时用「」，不要加粗。
+
+            4. 回答尽量控制在 6 行以内；用户明确要求详细时才展开，展开也分短段。
+
+            5. 不要重复用户的问题，不要加“当然可以”“希望以上回答对你有帮助”这类客套开头结尾。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。
+
+
+            【结构化数据表格规范】
+
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。'
+        - id: 4c677d0a-61ab-4361-ad26-0e6c6f9e639f
+          role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 650
+        y: 2980
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 2980
+    - id: answer_chat
+      data:
+        desc: ''
+        type: answer
+        title: 回复闲聊
+        answer: '{{#llm_chat.text#}}'
+        selected: false
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 950
+        y: 2980
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 2980
+    - id: code_leave_context
+      data:
+        type: code
+        title: 补全请假上下文
+        desc: 把草稿状态与用户本轮输入一起交给意图分类
+        selected: false
+        code_language: python3
+        code: "def main(query: str, leave_pending: str, action_pending: str, pending_action_type: str) -> dict:\n    leave_state\
+          \ = '当前存在请假草稿。' if str(leave_pending or '0') == '1' else '当前没有请假草稿。'\n    action_state = ('当前存在待处理业务动作：' + str(pending_action_type\
+          \ or '')) if str(action_pending or '0') == '1' else '当前没有业务动作草稿。'\n    return {'context_query': leave_state + '\\\
+          n' + action_state + '\\n用户本轮输入：' + str(query or '')}\n"
+        variables:
+        - variable: query
+          value_selector:
+          - sys
+          - query
+        - variable: leave_pending
+          value_selector:
+          - start_node
+          - leave_pending
+        - variable: action_pending
+          value_selector:
+          - start_node
+          - action_pending
+        - variable: pending_action_type
+          value_selector:
+          - start_node
+          - pending_action_type
+        outputs:
+          context_query:
+            type: string
+            children: null
+        dependencies: []
+      type: custom
+      width: 242
+      height: 120
+      position:
+        x: 330
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 330
+        y: 320
+    - id: llm_leave_extract
+      data:
+        type: llm
+        title: LLM 提取请假字段
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: "你是请假字段抽取器。只根据用户本轮原话抽取，不得猜测。\n输出严格 JSON，不要 Markdown，不要解释。固定字段：\n{\n  \"action\": \"collect|confirm|modify|cancel\"\
+            ,\n  \"leave_type\": \"病假|事假|年假|婚假|丧假|调休|其他或空字符串\",\n  \"start_date\": \"仅当用户明确给出 ISO 日期时填写，否则空字符串\",\n  \"end_date\"\
+            : \"仅当用户明确给出 ISO 日期时填写，否则空字符串\",\n  \"date_text\": \"用户原话中的日期表达，例如 下周一到下周三；没有则为空\",\n  \"reason\": \"用户明确说明的原因；没有则为空\"\
+            \n}\n动作规则：明确说确认/提交/可以 -> confirm；明确取消/不请了 -> cancel；明确修改 -> modify；其他 -> collect。\n“过几天”“下周”但不能确定具体日期时，不得补成日期，写入\
+            \ date_text。\n已经提供的字段不能丢；不确定的字段保持空字符串。\n\n【事实边界】\n涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。"
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: false
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 650
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 320
+    - id: code_leave_extract
+      data:
+        type: code
+        title: 解析请假字段
+        desc: 解析 LLM JSON，禁止在解析层猜测缺失字段
+        selected: false
+        code_language: python3
+        code: "def main(llm_json: str) -> dict:\n    import json\n    import re\n    text = (llm_json or '').strip()\n   \
+          \ text = re.sub(r'^```(?:json)?\\s*', '', text, flags=re.I)\n    text = re.sub(r'\\s*```$', '', text)\n    try:\n\
+          \        data = json.loads(text)\n    except Exception:\n        data = {}\n    def value(key):\n        item =\
+          \ data.get(key)\n        return '' if item is None else str(item)\n    action = value('action').lower()\n    if\
+          \ action not in ('collect', 'confirm', 'modify', 'cancel'):\n        action = 'collect'\n    return {\n        'action':\
+          \ action,\n        'leave_type': value('leave_type'),\n        'start_date': value('start_date'),\n        'end_date':\
+          \ value('end_date'),\n        'date_text': value('date_text'),\n        'reason': value('reason'),\n    }\n"
+        variables:
+        - variable: llm_json
+          value_selector:
+          - llm_leave_extract
+          - text
+        outputs:
+          action:
+            type: string
+            children: null
+          leave_type:
+            type: string
+            children: null
+          start_date:
+            type: string
+            children: null
+          end_date:
+            type: string
+            children: null
+          date_text:
+            type: string
+            children: null
+          reason:
+            type: string
+            children: null
+        dependencies: []
+      type: custom
+      width: 242
+      height: 120
+      position:
+        x: 950
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 320
+    - id: tool_leave_prepare
+      data:
+        type: tool
+        title: 准备请假草稿
+        desc: 工具节点：调用 prepare_leave（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: prepare_leave
+        tool_label: 请假准备与日期归一化
+        tool_configurations: {}
+        tool_parameters:
+          token:
+            type: mixed
+            value: '{{#start_node.auth_token#}}'
+          query:
+            type: mixed
+            value: '{{#sys.query#}}'
+          action:
+            type: mixed
+            value: '{{#code_leave_extract.action#}}'
+          leave_type:
+            type: mixed
+            value: '{{#code_leave_extract.leave_type#}}'
+          start_date:
+            type: mixed
+            value: '{{#code_leave_extract.start_date#}}'
+          end_date:
+            type: mixed
+            value: '{{#code_leave_extract.end_date#}}'
+          date_text:
+            type: mixed
+            value: '{{#code_leave_extract.date_text#}}'
+          reason:
+            type: mixed
+            value: '{{#code_leave_extract.reason#}}'
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: '{"code":500,"msg":"请假服务暂不可用","data":{"status_token":"STATE_ERROR","message":"请假服务暂不可用，请稍后重试"}}'
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 1250
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 320
+    - id: code_leave_prepare
+      data:
+        type: code
+        title: 解析请假准备结果
+        desc: 解析 prepare_leave 的结构化状态和确认令牌
+        selected: false
+        code_language: python3
+        code: "def main(prepare_text: str) -> dict:\n    import json\n    text = (prepare_text or '').strip()\n    try:\n\
+          \        payload = json.loads(text)\n        if isinstance(payload, str):\n            payload = json.loads(payload)\n\
+          \        if isinstance(payload, dict) and isinstance(payload.get('data'), dict):\n            payload = payload['data']\n\
+          \    except Exception:\n        payload = {}\n    if not isinstance(payload, dict):\n        payload = {}\n    fields\
+          \ = payload.get('fields') or {}\n    if not isinstance(fields, dict):\n        fields = {}\n    missing = payload.get('missing_fields')\
+          \ or []\n    if not isinstance(missing, list):\n        missing = [str(missing)]\n    duplicate = payload.get('duplicate')\
+          \ or {}\n    days = fields.get('days')\n    fields_text = '\\n'.join([\n        '请假类型：' + str(fields.get('leave_type')\
+          \ or '未提供'),\n        '开始日期：' + str(fields.get('start_date') or '未提供'),\n        '结束日期：' + str(fields.get('end_date')\
+          \ or '未提供'),\n        '请假天数：' + ('未计算' if days in (None, '') else str(days)),\n        '请假原因：' + str(fields.get('reason')\
+          \ or '未提供'),\n    ])\n    return {\n        'status_token': str(payload.get('status_token') or 'STATE_ERROR'),\n\
+          \        'message': str(payload.get('message') or ''),\n        'missing_text': '、'.join(str(v) for v in missing)\
+          \ or '无',\n        'fields_text': fields_text,\n        'confirmation_token': str(payload.get('confirmation_token')\
+          \ or ''),\n        'duplicate_text': json.dumps(duplicate, ensure_ascii=False) if duplicate else '',\n    }\n"
+        variables:
+        - variable: prepare_text
+          value_selector:
+          - tool_leave_prepare
+          - text
+        outputs:
+          status_token:
+            type: string
+            children: null
+          message:
+            type: string
+            children: null
+          missing_text:
+            type: string
+            children: null
+          fields_text:
+            type: string
+            children: null
+          confirmation_token:
+            type: string
+            children: null
+          duplicate_text:
+            type: string
+            children: null
+        dependencies: []
+      type: custom
+      width: 242
+      height: 120
+      position:
+        x: 1550
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1550
+        y: 320
+    - id: if_leave_state
+      data:
+        type: if-else
+        title: 请假状态分支
+        desc: ''
+        selected: false
+        logical_operator: or
+        cases:
+        - case_id: case_missing
+          id: case_missing
+          logical_operator: and
+          conditions:
+          - id: c_missing
+            comparison_operator: contains
+            value: STATE_MISSING
+            varType: string
+            variable_selector:
+            - code_leave_prepare
+            - status_token
+        - case_id: case_confirm
+          id: case_confirm
+          logical_operator: and
+          conditions:
+          - id: c_confirm
+            comparison_operator: contains
+            value: STATE_CONFIRM
+            varType: string
+            variable_selector:
+            - code_leave_prepare
+            - status_token
+        - case_id: case_ready
+          id: case_ready
+          logical_operator: and
+          conditions:
+          - id: c_ready
+            comparison_operator: contains
+            value: STATE_READY
+            varType: string
+            variable_selector:
+            - code_leave_prepare
+            - status_token
+        - case_id: case_terminal
+          id: case_terminal
+          logical_operator: or
+          conditions:
+          - id: c_duplicate
+            comparison_operator: contains
+            value: STATE_DUPLICATE
+            varType: string
+            variable_selector:
+            - code_leave_prepare
+            - status_token
+          - id: c_cancel
+            comparison_operator: contains
+            value: STATE_CANCELLED
+            varType: string
+            variable_selector:
+            - code_leave_prepare
+            - status_token
+          - id: c_error
+            comparison_operator: contains
+            value: STATE_ERROR
+            varType: string
+            variable_selector:
+            - code_leave_prepare
+            - status_token
+      type: custom
+      width: 242
+      height: 260
+      position:
+        x: 1850
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1850
+        y: 320
+    - id: llm_leave_ask
+      data:
+        type: llm
+        title: 请假追问
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: "学生请假信息不完整，请根据结构化结果自然追问。\n已识别字段：{{#code_leave_prepare.fields_text#}}\n缺失字段：{{#code_leave_prepare.missing_text#}}\n\
+            后端提示：{{#code_leave_prepare.message#}}\n只追问缺失项；已经明确的字段不要重复问。开始和结束日期都存在时，不得再问请假天数。若后端指出非法日期，要明确转告并请用户重新提供。【输出规范】\n\
+            1. 直接给结论，不输出思考过程、工具调用说明。\n2. 使用简体中文自然分段。多条请假记录、成绩或其他重复字段记录使用 Markdown 表格；\n   单条申请确认、追问和错误说明使用自然语言。\n3. 不重复已经正确提供的字段，不把“请假天数”作为额外必填项。\n\
+            4. 日期范围完整时应自动说明天数，不再要求用户另报天数。\n\n【事实边界】\n涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。\n\
+            \n【结构化数据表格规范】\n当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。"
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 2150
+        y: 100
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2150
+        y: 100
+    - id: llm_leave_confirm
+      data:
+        type: llm
+        title: 请假复述确认
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: "请根据后端归一化结果向学生复述请假信息并等待确认。\n{{#code_leave_prepare.fields_text#}}\n必须说清楚类型、开始日期、结束日期、自动计算的天数和原因，最后提示“回复确认提交，回复修改则重新填写”。不要再调用任何提交动作。【输出规范】\n\
+            1. 直接给结论，不输出思考过程、工具调用说明。\n2. 使用简体中文自然分段。多条请假记录、成绩或其他重复字段记录使用 Markdown 表格；\n   单条申请确认、追问和错误说明使用自然语言。\n3. 不重复已经正确提供的字段，不把“请假天数”作为额外必填项。\n\
+            4. 日期范围完整时应自动说明天数，不再要求用户另报天数。\n\n【事实边界】\n涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。\n\
+            \n【结构化数据表格规范】\n当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。"
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 2150
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2150
+        y: 300
+    - id: tool_leave_confirm
+      data:
+        type: tool
+        title: 确认后提交请假
+        desc: 工具节点：调用 confirm_leave（yuejiao_api）
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: confirm_leave
+        tool_label: 确认令牌校验并写入正式请假单
+        tool_configurations: {}
+        tool_parameters:
+          token:
+            type: mixed
+            value: '{{#start_node.auth_token#}}'
+          confirmation_token:
+            type: mixed
+            value: '{{#code_leave_prepare.confirmation_token#}}'
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: '{"code":500,"msg":"请假服务暂不可用","data":{"status_token":"STATE_ERROR","message":"请假服务暂不可用，请稍后重试"}}'
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 2150
+        y: 500
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2150
+        y: 500
+    - id: llm_leave_result
+      data:
+        type: llm
+        title: 生成请假提交结果
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: "请假最终写入接口返回：{{#tool_leave_confirm.text#}}\n若已提交，说明单号、起止日期、天数和待审批状态；若重复，必须同时说明本次申请范围和已有单号，不得说成角色无权限。【输出规范】\n\
+            1. 直接给结论，不输出思考过程、工具调用说明。\n2. 使用简体中文自然分段。多条请假记录、成绩或其他重复字段记录使用 Markdown 表格；\n   单条申请确认、追问和错误说明使用自然语言。\n3. 不重复已经正确提供的字段，不把“请假天数”作为额外必填项。\n\
+            4. 日期范围完整时应自动说明天数，不再要求用户另报天数。\n\n【事实边界】\n涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。\n\
+            \n【结构化数据表格规范】\n当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。"
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 2450
+        y: 500
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2450
+        y: 500
+    - id: llm_leave_terminal
+      data:
+        type: llm
+        title: 请假终止或错误说明
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: "请假准备状态：{{#code_leave_prepare.status_token#}}\n后端提示：{{#code_leave_prepare.message#}}\n已识别信息：{{#code_leave_prepare.fields_text#}}\n\
+            重复信息：{{#code_leave_prepare.duplicate_text#}}\n请如实说明取消、重复或错误原因，不得声称已经提交。【输出规范】\n1. 直接给结论，不输出思考过程、工具调用说明。\n2. 使用简体中文自然分段。多条请假记录、成绩或其他重复字段记录使用\
+            \ Markdown 表格；\n   单条申请确认、追问和错误说明使用自然语言。\n3. 不重复已经正确提供的字段，不把“请假天数”作为额外必填项。\n4. 日期范围完整时应自动说明天数，不再要求用户另报天数。\n\n\
+            【事实边界】\n涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。\n\
+            \n【结构化数据表格规范】\n当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。"
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 2150
+        y: 700
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2150
+        y: 700
+    - id: answer_leave_ask
+      data:
+        type: answer
+        title: 回复请假追问
+        desc: ''
+        selected: false
+        answer: '{{#llm_leave_ask.text#}}'
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 2450
+        y: 100
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2450
+        y: 100
+    - id: answer_leave_confirm
+      data:
+        type: answer
+        title: 回复请假确认
+        desc: ''
+        selected: false
+        answer: '{{#llm_leave_confirm.text#}}'
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 2450
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2450
+        y: 300
+    - id: answer_leave_result
+      data:
+        type: answer
+        title: 回复请假结果
+        desc: ''
+        selected: false
+        answer: '{{#llm_leave_result.text#}}'
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 2750
+        y: 500
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2750
+        y: 500
+    - id: answer_leave_terminal
+      data:
+        type: answer
+        title: 回复请假终止
+        desc: ''
+        selected: false
+        answer: '{{#llm_leave_terminal.text#}}'
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 2450
+        y: 700
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2450
+        y: 700
+    - id: llm_action_extract
+      data:
+        type: llm
+        title: LLM 提取业务动作
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: '你是业务动作字段抽取器。当前待处理动作类型：{{#start_node.pending_action_type#}}。
+
+            最近用户消息（仅补全上下文，不得覆盖本轮明确表达）：
+
+            {{#start_node.recent_history#}}
+
+            只输出严格 JSON，不输出解释：
+
+            {"action_type":"", "user_action":"collect|confirm|modify|cancel", "slots":{...}}
+
+            允许的 action_type：event_register、feedback_create、feedback_cancel、application_create、application_update、application_cancel。
+
+            slots 可用字段：event_id,event_name,selection,participant_name,contact_info,
+
+            student_id,student_name,course_name,score_id,score_value,
+
+            feedback_content,feedback_detail,ticket_id,ticket_content,customer_name,
+
+            target_country,background_info,application_id,country,application_mode,
+
+            program,university,remark,application_stage,note,report_content,report_date,
+
+            lead_id,lead_status,follow_up_note,solution。
+
+            申请动作的国家字段必须使用 country；target_country 只用于客户线索。
+
+            规则：明确确认/提交 -> confirm；明确取消 -> cancel；明确修改 -> modify；其他 collect。
+
+            不得补写用户没有提供的字段；无法确定的字段保持空字符串。查询成绩仍使用原成绩工具；活动报名、售后提交/撤回、就读申请新增/修改/撤销进入通用动作。
+
+
+            【事实边界】
+
+            涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。'
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 650
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 650
+        y: 320
+    - id: code_action_extract
+      data:
+        type: code
+        title: 解析业务动作字段
+        desc: ''
+        selected: false
+        code_language: python3
+        code: "def main(raw: str) -> dict:\n    import json, re\n    text = (raw or '').strip()\n    text = re.sub(r'^```(?:json)?\\\
+          s*', '', text, flags=re.I)\n    text = re.sub(r'\\s*```$', '', text)\n    try: data = json.loads(text)\n    except\
+          \ Exception: data = {}\n    slots = data.get('slots') if isinstance(data.get('slots'), dict) else {}\n    clean\
+          \ = {str(k): v for k, v in slots.items() if v not in (None, '', [], {})}\n    action = str(data.get('user_action')\
+          \ or 'collect').lower()\n    if action not in ('collect','confirm','modify','cancel'): action = 'collect'\n    return\
+          \ {'action_type': str(data.get('action_type') or ''), 'user_action': action,\n            'slots_json': json.dumps(clean,\
+          \ ensure_ascii=False)}\n"
+        variables:
+        - variable: raw
+          value_selector:
+          - llm_action_extract
+          - text
+        outputs:
+          action_type:
+            type: string
+            children: null
+          user_action:
+            type: string
+            children: null
+          slots_json:
+            type: string
+            children: null
+        dependencies: []
+      type: custom
+      width: 242
+      height: 120
+      position:
+        x: 950
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 950
+        y: 320
+    - id: tool_action_prepare
+      data:
+        type: tool
+        title: 准备业务动作
+        desc: ''
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: prepare_business_action
+        tool_label: 补字段、消歧和确认
+        tool_configurations: {}
+        tool_parameters:
+          token:
+            type: mixed
+            value: '{{#start_node.auth_token#}}'
+          query:
+            type: mixed
+            value: '{{#sys.query#}}'
+          history:
+            type: mixed
+            value: '{{#start_node.recent_history#}}'
+          action_type:
+            type: mixed
+            value: '{{#code_action_extract.action_type#}}'
+          user_action:
+            type: mixed
+            value: '{{#code_action_extract.user_action#}}'
+          slots_json:
+            type: mixed
+            value: '{{#code_action_extract.slots_json#}}'
+          visitor_key:
+            type: mixed
+            value: '{{#start_node.visitor_key#}}'
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: '{"code":500,"msg":"业务服务暂不可用","data":{"status_token":"STATE_ERROR","message":"业务服务暂不可用"}}'
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 1250
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1250
+        y: 320
+    - id: code_action_prepare
+      data:
+        type: code
+        title: 解析业务准备结果
+        desc: ''
+        selected: false
+        code_language: python3
+        code: "def main(raw: str) -> dict:\n    import json\n    try:\n        payload = json.loads((raw or '').strip())\n\
+          \        if isinstance(payload, str): payload = json.loads(payload)\n        if isinstance(payload, dict) and isinstance(payload.get('data'),\
+          \ dict): payload = payload['data']\n    except Exception: payload = {}\n    missing = payload.get('missing_fields')\
+          \ or []\n    candidates = payload.get('candidates') or []\n    lines = []\n    for item in candidates:\n       \
+          \ if isinstance(item, dict): lines.append(str(item.get('label') or item))\n    return {\n        'status_token':\
+          \ str(payload.get('status_token') or 'STATE_ERROR'),\n        'message': str(payload.get('message') or ''),\n  \
+          \      'preview': str(payload.get('preview') or ''),\n        'missing_text': '、'.join(str(v) for v in missing)\
+          \ or '无',\n        'candidates_text': '\\n'.join(lines) or '无',\n        'confirmation_token': str(payload.get('confirmation_token')\
+          \ or ''),\n    }\n"
+        variables:
+        - variable: raw
+          value_selector:
+          - tool_action_prepare
+          - text
+        outputs:
+          status_token:
+            type: string
+            children: null
+          message:
+            type: string
+            children: null
+          preview:
+            type: string
+            children: null
+          missing_text:
+            type: string
+            children: null
+          candidates_text:
+            type: string
+            children: null
+          confirmation_token:
+            type: string
+            children: null
+        dependencies: []
+      type: custom
+      width: 242
+      height: 120
+      position:
+        x: 1550
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1550
+        y: 320
+    - id: if_action_state
+      data:
+        type: if-else
+        title: 业务动作状态分支
+        desc: ''
+        selected: false
+        logical_operator: or
+        cases:
+        - case_id: case_action_missing
+          id: case_action_missing
+          logical_operator: or
+          conditions:
+          - id: c_action_missing
+            comparison_operator: contains
+            value: STATE_MISSING
+            varType: string
+            variable_selector:
+            - code_action_prepare
+            - status_token
+          - id: c_action_ambiguous
+            comparison_operator: contains
+            value: STATE_AMBIGUOUS
+            varType: string
+            variable_selector:
+            - code_action_prepare
+            - status_token
+        - case_id: case_action_confirm
+          id: case_action_confirm
+          logical_operator: and
+          conditions:
+          - id: c_action_confirm
+            comparison_operator: contains
+            value: STATE_CONFIRM
+            varType: string
+            variable_selector:
+            - code_action_prepare
+            - status_token
+        - case_id: case_action_ready
+          id: case_action_ready
+          logical_operator: and
+          conditions:
+          - id: c_action_ready
+            comparison_operator: contains
+            value: STATE_READY
+            varType: string
+            variable_selector:
+            - code_action_prepare
+            - status_token
+      type: custom
+      width: 242
+      height: 260
+      position:
+        x: 1850
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 1850
+        y: 320
+    - id: llm_action_ask
+      data:
+        type: llm
+        title: 业务字段追问
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: "业务信息不完整或有多个候选。\n后端提示：{{#code_action_prepare.message#}}\n缺失字段：{{#code_action_prepare.missing_text#}}\n候选列表：\n\
+            {{#code_action_prepare.candidates_text#}}\n只追问缺失项；有候选时列出候选让用户选择；已明确字段不要重复追问。【输出规范】\n1. 直接给结论，不输出思考过程。\n2. 使用简体中文自然分段。多条候选、项目、活动、成绩、学生、请假、线索或工单\n\
+            \   使用 Markdown 表格；单条确认、追问和错误说明使用自然语言。\n3. 不重复追问已经明确的字段。\n\n【结构化数据表格规范】\n当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用\
+            \ Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。\n\n【事实边界】\n涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。"
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 2150
+        y: 80
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2150
+        y: 80
+    - id: llm_action_confirm
+      data:
+        type: llm
+        title: 业务动作复述确认
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: "请复述以下操作并等待用户确认，绝不能声称已经执行：\n{{#code_action_prepare.preview#}}\n最后提示回复“确认”执行，回复“修改”重新填写。【输出规范】\n1. 直接给结论，不输出思考过程。\n\
+            2. 使用简体中文自然分段。多条候选、项目、活动、成绩、学生、请假、线索或工单\n   使用 Markdown 表格；单条确认、追问和错误说明使用自然语言。\n3. 不重复追问已经明确的字段。\n\n【结构化数据表格规范】\n\
+            当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。\n\
+            \n【事实边界】\n涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。"
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 2150
+        y: 270
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2150
+        y: 270
+    - id: tool_action_execute
+      data:
+        type: tool
+        title: 执行业务动作
+        desc: ''
+        selected: false
+        provider_id: 1c2de193-75e4-4c78-8366-99b5f4e1ca00
+        provider_name: yuejiao_api
+        provider_type: api
+        tool_name: execute_business_action
+        tool_label: 确认令牌校验后执行
+        tool_configurations: {}
+        tool_parameters:
+          token:
+            type: mixed
+            value: '{{#start_node.auth_token#}}'
+          confirmation_token:
+            type: mixed
+            value: '{{#code_action_prepare.confirmation_token#}}'
+          visitor_key:
+            type: mixed
+            value: '{{#start_node.visitor_key#}}'
+        tool_node_version: '2'
+        error_strategy: default-value
+        default_value:
+        - key: text
+          type: string
+          value: '{"code":500,"msg":"业务服务暂不可用","data":{"status_token":"STATE_ERROR","message":"业务服务暂不可用"}}'
+      type: custom
+      width: 242
+      height: 96
+      position:
+        x: 2150
+        y: 460
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2150
+        y: 460
+    - id: llm_action_result
+      data:
+        type: llm
+        title: 生成业务动作结果
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: "业务执行接口返回：{{#tool_action_execute.text#}}。请准确说明执行结果；失败时说明失败原因，不得声称成功。【输出规范】\n1. 直接给结论，不输出思考过程。\n2. 使用简体中文自然分段。多条候选、项目、活动、成绩、学生、请假、线索或工单\n\
+            \   使用 Markdown 表格；单条确认、追问和错误说明使用自然语言。\n3. 不重复追问已经明确的字段。\n\n【结构化数据表格规范】\n当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用\
+            \ Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。\n\n【事实边界】\n涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。"
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 2450
+        y: 460
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2450
+        y: 460
+    - id: llm_action_terminal
+      data:
+        type: llm
+        title: 业务动作错误说明
+        desc: ''
+        selected: false
+        model:
+          mode: chat
+          name: qwen3.8-max
+          provider: langgenius/tongyi/tongyi
+          completion_params:
+            temperature: 0.2
+            enable_thinking: false
+        vision:
+          enabled: false
+        context:
+          enabled: false
+          variable_selector: []
+        prompt_template:
+        - role: system
+          text: "业务准备状态：{{#code_action_prepare.status_token#}}\n后端提示：{{#code_action_prepare.message#}}\n请如实说明取消、重复、权限或错误原因。【输出规范】\n\
+            1. 直接给结论，不输出思考过程。\n2. 使用简体中文自然分段。多条候选、项目、活动、成绩、学生、请假、线索或工单\n   使用 Markdown 表格；单条确认、追问和错误说明使用自然语言。\n3. 不重复追问已经明确的字段。\n\
+            \n【结构化数据表格规范】\n当回答中包含两条及以上项目、活动、学生、成绩、请假、审批、报名、线索、工单或统计记录时，必须用 Markdown 表格输出。表头必须来自数据实际字段；一行动作一条记录；不得把多条记录写成连续长段落。普通说明、单条确认、追问和错误提示继续使用自然语言。\n\
+            \n【事实边界】\n涉及公司、项目、费用、政策、签证、活动、学籍和业务数据时，只能依据工具返回或公司已提供的政策、项目与业务资料回答。没有依据时直接说“公司目前暂未提供这项信息，建议由顾问进一步确认”，不得使用模型常识补全，不得推断客户符合某项资格，也不得承诺审批或办理结果。"
+        - role: user
+          text: '{{#sys.query#}}'
+        memory:
+          window:
+            size: 10
+            enabled: true
+          role_prefix:
+            user: ''
+            assistant: ''
+          query_prompt_template: '{{#sys.query#}}'
+      type: custom
+      width: 242
+      height: 88
+      position:
+        x: 2150
+        y: 650
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2150
+        y: 650
+    - id: answer_action_ask
+      data:
+        type: answer
+        title: 回复业务追问
+        desc: ''
+        selected: false
+        answer: '{{#llm_action_ask.text#}}'
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 2450
+        y: 80
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2450
+        y: 80
+    - id: answer_action_confirm
+      data:
+        type: answer
+        title: 回复业务确认
+        desc: ''
+        selected: false
+        answer: '{{#llm_action_confirm.text#}}'
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 2450
+        y: 270
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2450
+        y: 270
+    - id: answer_action_result
+      data:
+        type: answer
+        title: 回复业务结果
+        desc: ''
+        selected: false
+        answer: '{{#llm_action_result.text#}}'
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 2750
+        y: 460
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2750
+        y: 460
+    - id: answer_action_terminal
+      data:
+        type: answer
+        title: 回复业务错误
+        desc: ''
+        selected: false
+        answer: '{{#llm_action_terminal.text#}}'
+        variables: []
+      type: custom
+      width: 242
+      height: 103
+      position:
+        x: 2450
+        y: 650
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      positionAbsolute:
+        x: 2450
+        y: 650
+    viewport:
+      x: -372.513532725359
+      y: -18.813516833967697
+      zoom: 1.1196395898441716
